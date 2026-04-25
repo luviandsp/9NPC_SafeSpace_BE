@@ -20,15 +20,15 @@ export const reportStatusEnum = pgEnum('report_status_enum', [
 ]);
 
 export const user = pgTable('user', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  name: varchar('name', { length: 255 }).notNull(),
+  id: uuid('id').primaryKey(), // ID akan diambil dari Supabase Auth, jadi kita hapus defaultRandom()
+  name: varchar('name', { length: 255 }),
   profilePicture: text('profilePicture'),
   email: varchar('email', { length: 255 }).notNull().unique(),
-  phoneNumber: varchar('phoneNumber', { length: 50 }).notNull(),
-  nim: varchar('nim', { length: 50 }).notNull().unique(),
-  department: varchar('department', { length: 255 }).notNull(),
-  faculty: varchar('faculty', { length: 255 }).notNull(),
-  enrollmentYear: smallint('enrollmentYear').notNull(),
+  phoneNumber: varchar('phoneNumber', { length: 50 }),
+  nim: varchar('nim', { length: 50 }).unique(),
+  department: varchar('department', { length: 255 }),
+  faculty: varchar('faculty', { length: 255 }),
+  enrollmentYear: smallint('enrollmentYear'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt')
     .notNull()

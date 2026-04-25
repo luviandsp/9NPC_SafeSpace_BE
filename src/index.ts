@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
-import appRoutes from './routes/index';
 import cors from 'cors';
 import helmet from 'helmet';
+import appRoutes from './routes/index';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,6 +10,10 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+
+app.get('/', (req: Request, res: Response) => {
+  res.send('API is running...');
+});
 
 app.use('/api', appRoutes);
 
