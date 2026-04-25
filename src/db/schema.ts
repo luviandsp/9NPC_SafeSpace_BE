@@ -18,6 +18,7 @@ export const reportStatusEnum = pgEnum('report_status_enum', [
   'ASSISTANCE',
   'REJECTED',
   'DONE',
+  'CANCELLED',
 ]);
 
 export const user = pgTable('user', {
@@ -39,10 +40,10 @@ export const user = pgTable('user', {
 
 export const admin = pgTable('admin', {
   id: uuid('id').defaultRandom().primaryKey(),
-  name: varchar('name', { length: 255 }).notNull(),
+  name: varchar('name', { length: 255 }),
   profilePicture: text('profilePicture'),
   email: varchar('email', { length: 255 }).notNull().unique(),
-  unit: varchar('unit', { length: 255 }).notNull(),
+  unit: varchar('unit', { length: 255 }),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt')
     .notNull()

@@ -4,6 +4,7 @@ import {
   getAllReports,
   generateUploadSignedUrl,
   getReportById,
+  cancelReport,
 } from '../controllers/report.controller';
 
 const router = Router();
@@ -15,5 +16,7 @@ router.post('/upload-signed-url', generateUploadSignedUrl);
 router.get('/:id', getReportById);
 
 router.get('/', getAllReports);
+
+router.post('/:id', cancelReport);
 
 export default router;

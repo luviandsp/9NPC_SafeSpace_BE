@@ -248,3 +248,34 @@ export const getAllReports = async (
     next(error);
   }
 };
+
+export const cancelReport = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { id } = getReportByIdSchema.parse(req.params);
+  const userId = req.user!.id;
+
+  try {
+    const existingReport = await db.query.report.findFirst({
+      where: and(eq(report.id, id), eq(report.userId, userId)),
+    });
+
+    if (!existingReport) {
+      return res.status(404).json({
+        success: false,
+        message: 'Laporan tidak ditemukan atau Anda tidak memiliki akses',
+      });
+    }
+
+    await db.update(report).set({ status: "CANCELLED" }).where(eq(report.id, id));
+
+    return res.status(200).json({
+      success: true,
+      message: 'Laporan berhasil dibatalkan',
+    });
+  } catch (error) {
+    next(error);
+  }
+};

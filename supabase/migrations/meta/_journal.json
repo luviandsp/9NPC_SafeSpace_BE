@@ -29,6 +29,20 @@
       "when": 1777120435861,
       "tag": "0003_lean_darkstar",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777122524066,
+      "tag": "0004_fearless_sphinx",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777124776716,
+      "tag": "0005_bored_cobalt_man",
+      "breakpoints": true
     }
   ]
 }

@@ -47,3 +47,13 @@ export const getAllReportsSchema = z.object({
     .max(100, 'Limit maksimal adalah 100')
     .default(10),
 });
+
+export const updateStatusReportSchema = z.object({
+  id: z.uuid('ID harus berupa UUID valid').min(1, 'ID harus diisi').trim(),
+  status: z.enum(
+    ['RECEIVED', 'PROCESS', 'REVIEW', 'ASSISTANCE', 'REJECTED', 'DONE'],
+    {
+      message: 'Status tidak valid',
+    },
+  ),
+});
