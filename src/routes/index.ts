@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import authRoutes from './auth.route';
-import reportRoutes from './report.route';
-import adminRoutes from './admin.route';
-import { requireAdmin, requireAuth } from '../middlewares/auth.middleware';
+import authRoutes from './auth.route.js';
+import reportRoutes from './report.route.js';
+import adminRoutes from './admin.route.js';
+import { requireAdmin, requireAuth } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 

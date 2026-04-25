@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabase } from '../config/supabase';
+import { supabase } from '../config/supabase.js';
 import {
   signInSchema,
   signUpSchema,
   updatePasswordSchema,
-} from '../utils/validators/auth.validator';
+} from '../utils/validators/auth.validator.js';
 
 export const signUp = async (
   req: Request,

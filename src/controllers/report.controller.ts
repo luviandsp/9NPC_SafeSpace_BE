@@ -1,15 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
-import { db } from '../db/index';
-import { report, evidenceAsset } from '../db/schema';
+import { db } from '../db/index.js';
+import { report, evidenceAsset } from '../db/schema.js';
 import { nanoid } from 'nanoid';
-import supabase from '../config/supabase';
+import supabase from '../config/supabase.js';
 import { and, eq, sql } from 'drizzle-orm';
 import {
   createReportSchema,
   getAllReportsSchema,
   generateUploadSignedUrlSchema,
   getReportByIdSchema,
-} from '../utils/validators/report.validator';
+} from '../utils/validators/report.validator.js';
 
 export const createReport = async (
   req: Request,

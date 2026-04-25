@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import appRoutes from './routes/index';
+import appRoutes from './routes/index.js';
 import { z, ZodError } from 'zod';
 
 const app = express();

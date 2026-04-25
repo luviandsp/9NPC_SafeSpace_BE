@@ -5,7 +5,7 @@ import {
   generateUploadSignedUrl,
   getReportById,
   cancelReport,
-} from '../controllers/report.controller';
+} from '../controllers/report.controller.js';
 
 const router = Router();
 

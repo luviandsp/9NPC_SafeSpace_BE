@@ -3,11 +3,11 @@ import {
   getAllReportsSchema,
   getReportByIdSchema,
   updateStatusReportSchema,
-} from '../utils/validators/report.validator';
-import { db } from '../db';
-import { report } from '../db/schema';
+} from '../utils/validators/report.validator.js';
+import { db } from '../db/index.js';
+import { report } from '../db/schema.js';
 import { eq, sql } from 'drizzle-orm';
-import supabase from '../config/supabase';
+import supabase from '../config/supabase.js';
 
 export const getAllReports = async (
   req: Request,
