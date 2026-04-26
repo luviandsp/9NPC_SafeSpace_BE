@@ -51,8 +51,6 @@ app.get('/', (req: Request, res: Response) => {
 
 app.use('/api', appRoutes);
 
-app.get('/favicon.ico', (req, res) => res.status(204).end());
-
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('Error tertangkap di Global Handler:', err);
 
@@ -76,8 +74,8 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// app.listen(PORT, () => {
-//   console.log(`Server is running on http://localhost:${PORT}`);
-// });
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
 
 export default app;

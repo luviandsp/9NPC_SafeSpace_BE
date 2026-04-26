@@ -23,10 +23,11 @@ export const signUp = async (
     if (error) return next(error);
 
     return res.status(201).json({
+      success: true,
       message:
         'Registrasi berhasil. Profil dasar telah dibuat. Silakan cek email Anda untuk verifikasi.',
       // Trigger di database akan menangani pembuatan profil di tabel 'user'
-      user: data.user,
+      data: data.user,
     });
   } catch (error) {
     next(error);
@@ -49,9 +50,12 @@ export const signIn = async (
     if (error) return next(error);
 
     return res.json({
+      success: true,
       message: 'Login berhasil',
-      user: data.user,
-      token: data.session?.access_token,
+      data: {
+        user: data.user,
+        token: data.session?.access_token,
+      },
     });
   } catch (error) {
     next(error);
@@ -68,7 +72,7 @@ export const signOut = async (
 
     if (error) return next(error);
 
-    return res.json({ message: 'Logout berhasil' });
+    return res.json({ success: true, message: 'Logout berhasil' });
   } catch (error) {
     next(error);
   }
@@ -91,7 +95,11 @@ export const getCurrentUser = async (
       return res.status(404).json({ error: 'Pengguna tidak ditemukan' });
     }
 
-    return res.json({ user });
+    return res.json({
+      success: true,
+      message: 'Pengguna ditemukan',
+      data: user,
+    });
   } catch (error) {
     next(error);
   }
@@ -114,7 +122,11 @@ export const getCurrentSession = async (
       return res.status(404).json({ error: 'Sesi tidak ditemukan' });
     }
 
-    return res.json({ session });
+    return res.json({
+      success: true,
+      message: 'Sesi ditemukan',
+      data: session,
+    });
   } catch (error) {
     next(error);
   }
@@ -136,8 +148,9 @@ export const updatePasswordUser = async (
     if (error) return next(error);
 
     return res.json({
+      success: true,
       message: 'Password berhasil diperbarui',
-      user: data.user,
+      data: data.user,
     });
   } catch (error) {
     next(error);

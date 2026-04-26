@@ -29,7 +29,7 @@ export const evidenceUploadSchema = z.object({
       message: 'Tipe file tidak didukung',
     },
   ),
-  fileSize: z.number().max(5 * 1024 * 1024, 'Ukuran file maksimal 5MB'),
+  fileSize: z.number().max(50 * 1024 * 1024, 'Ukuran file maksimal 50MB'),
 });
 
 export const getReportByIdSchema = z.object({
@@ -51,7 +51,15 @@ export const getAllReportsSchema = z.object({
 export const updateStatusReportSchema = z.object({
   id: z.uuid('ID harus berupa UUID valid').min(1, 'ID harus diisi').trim(),
   status: z.enum(
-    ['RECEIVED', 'PROCESS', 'REVIEW', 'ASSISTANCE', 'REJECTED', 'DONE'],
+    [
+      'RECEIVED',
+      'PROCESS',
+      'REVIEW',
+      'ASSISTANCE',
+      'REJECTED',
+      'DONE',
+      'CANCELLED',
+    ],
     {
       message: 'Status tidak valid',
     },

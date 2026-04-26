@@ -10,7 +10,12 @@ export const updateUserProfileSchema = z.object({
     .min(2, 'Nama harus memiliki minimal 2 karakter')
     .max(50, 'Nama harus memiliki maksimal 50 karakter')
     .trim(),
-  phoneNumber: z.string().regex(phoneRegex, 'Nomor telepon tidak valid').trim(),
+  phoneNumber: z
+    .string()
+    .regex(phoneRegex, 'Nomor telepon tidak valid')
+    .min(1, 'Nomor telepon harus diisi')
+    .max(25, 'Nomor telepon terlalu panjang')
+    .trim(),
   nim: z
     .string()
     .min(10, 'NIM harus memiliki minimal 10 karakter')
@@ -38,7 +43,11 @@ export const updateProfilePictureSchema = z.object({
 });
 
 export const profilePictureUploadSchema = z.object({
-  fileName: z.string().min(1, 'Nama file harus diisi').trim(),
+  fileName: z
+    .string()
+    .min(1, 'Nama file harus diisi')
+    .max(100, 'Nama file terlalu panjang')
+    .trim(),
   fileType: z.enum(['image/jpeg', 'image/png', 'image/jpg'], {
     message: 'Tipe file tidak didukung',
   }),

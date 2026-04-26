@@ -6,6 +6,7 @@ export const signUpSchema = z
     password: z
       .string()
       .min(8, 'Password harus memiliki minimal 8 karakter')
+      .max(50, 'Password terlalu panjang')
       .refine((value) => {
         const hasUpperCase = /[A-Z]/.test(value);
         const hasLowerCase = /[a-z]/.test(value);
@@ -15,7 +16,11 @@ export const signUpSchema = z
         return hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
       }, 'Password harus mengandung huruf besar, huruf kecil, angka, dan karakter khusus')
       .trim(),
-    confirmPassword: z.string().trim(),
+    confirmPassword: z
+      .string()
+      .min(8, 'Konfirmasi password harus memiliki minimal 8 karakter')
+      .max(50, 'Konfirmasi password terlalu panjang')
+      .trim(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Password dan konfirmasi password harus sama',
@@ -33,6 +38,7 @@ export const updatePasswordSchema = z
     newPassword: z
       .string()
       .min(8, 'Password baru harus memiliki minimal 8 karakter')
+      .max(50, 'Password baru terlalu panjang')
       .refine((value) => {
         const hasUpperCase = /[A-Z]/.test(value);
         const hasLowerCase = /[a-z]/.test(value);
@@ -45,6 +51,7 @@ export const updatePasswordSchema = z
     confirmPassword: z
       .string()
       .min(8, 'Konfirmasi password harus memiliki minimal 8 karakter')
+      .max(50, 'Konfirmasi password terlalu panjang')
       .trim(),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
