@@ -5,9 +5,10 @@ import {
   updateStatusReportSchema,
 } from '../utils/validators/report.validator.js';
 import { db } from '../db/index.js';
-import { report } from '../db/schema.js';
+import { report, admin } from '../db/schema.js';
 import { eq, sql } from 'drizzle-orm';
 import supabase from '../config/supabase.js';
+import { updateAdminProfileSchema } from '../utils/validators/admin.validator.js';
 
 export const getAllReports = async (
   req: Request,
@@ -145,6 +146,71 @@ export const updateStatusReport = async (
     return res.status(200).json({
       success: true,
       message: 'Status laporan berhasil diperbarui',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAdminProfile = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const adminId = req.user!.id;
+
+  try {
+    const adminData = await db.query.admin.findFirst({
+      where: eq(report.id, adminId),
+    });
+
+    if (!adminData) {
+      return res.status(404).json({
+        success: false,
+        message: 'Admin tidak ditemukan',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profil admin berhasil diambil',
+      data: adminData,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateAdminProfile = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const adminId = req.user!.id;
+  const { name, unit } = updateAdminProfileSchema.parse(req.body);
+
+  try {
+    const existingAdmin = await db.query.admin.findFirst({
+      where: eq(admin.id, adminId),
+    });
+
+    if (!existingAdmin) {
+      return res.status(404).json({
+        success: false,
+        message: 'Admin tidak ditemukan',
+      });
+    }
+
+    const updatedAdmin = await db
+      .update(admin)
+      .set({ name, unit })
+      .where(eq(admin.id, adminId))
+      .returning();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profil admin berhasil diperbarui',
+      data: updatedAdmin,
     });
   } catch (error) {
     next(error);

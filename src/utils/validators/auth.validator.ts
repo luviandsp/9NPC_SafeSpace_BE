@@ -51,3 +51,7 @@ export const updatePasswordSchema = z
     message: 'Password baru dan konfirmasi password harus sama',
     path: ['confirmPassword'],
   });
+
+export const emailRequestSchema = z.object({
+  email: z.email('Email tidak valid').trim(),
+});

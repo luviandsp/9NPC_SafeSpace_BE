@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { supabase } from '../config/supabase.js';
 import {
+  emailRequestSchema,
   signInSchema,
   signUpSchema,
   updatePasswordSchema,
@@ -137,6 +138,51 @@ export const updatePasswordUser = async (
     return res.json({
       message: 'Password berhasil diperbarui',
       user: data.user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resendVerificationEmail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { email } = emailRequestSchema.parse(req.body);
+
+  try {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+    });
+
+    if (error) return next(error);
+
+    return res.json({
+      success: true,
+      message: 'Email verifikasi telah dikirim ulang. Silakan cek inbox Anda.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetEmailPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { email } = emailRequestSchema.parse(req.body);
+
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+
+    if (error) return next(error);
+
+    return res.json({
+      success: true,
+      message: 'Email reset password telah dikirim. Silakan cek inbox Anda.',
     });
   } catch (error) {
     next(error);

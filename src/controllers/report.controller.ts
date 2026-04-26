@@ -269,7 +269,10 @@ export const cancelReport = async (
       });
     }
 
-    await db.update(report).set({ status: "CANCELLED" }).where(eq(report.id, id));
+    await db
+      .update(report)
+      .set({ status: 'CANCELLED' })
+      .where(eq(report.id, id));
 
     return res.status(200).json({
       success: true,
