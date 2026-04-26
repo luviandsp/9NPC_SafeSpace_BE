@@ -68,7 +68,8 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   const message = err.message || 'Terjadi kesalahan pada server';
 
   res.status(statusCode).json({
-    error: message,
+    success: false,
+    message: message,
     // (Opsional) Tampilkan stack trace hanya saat development
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
   });

@@ -49,7 +49,7 @@ export const signIn = async (
 
     if (error) return next(error);
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: 'Login berhasil',
       data: {
@@ -72,7 +72,7 @@ export const signOut = async (
 
     if (error) return next(error);
 
-    return res.json({ success: true, message: 'Logout berhasil' });
+    return res.status(200).json({ success: true, message: 'Logout berhasil' });
   } catch (error) {
     next(error);
   }
@@ -95,7 +95,7 @@ export const getCurrentUser = async (
       return res.status(404).json({ error: 'Pengguna tidak ditemukan' });
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: 'Pengguna ditemukan',
       data: user,
@@ -122,7 +122,7 @@ export const getCurrentSession = async (
       return res.status(404).json({ error: 'Sesi tidak ditemukan' });
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: 'Sesi ditemukan',
       data: session,
@@ -147,7 +147,7 @@ export const updatePasswordUser = async (
 
     if (error) return next(error);
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: 'Password berhasil diperbarui',
       data: data.user,
@@ -172,7 +172,7 @@ export const resendVerificationEmail = async (
 
     if (error) return next(error);
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: 'Email verifikasi telah dikirim ulang. Silakan cek inbox Anda.',
     });
@@ -193,7 +193,7 @@ export const resetEmailPassword = async (
 
     if (error) return next(error);
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: 'Email reset password telah dikirim. Silakan cek inbox Anda.',
     });

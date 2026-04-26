@@ -1,0 +1,554 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "SafeSpace API",
+    "version": "1.0.0",
+    "description": "Dokumentasi API untuk SafeSpace Backend. Menyediakan layanan pelaporan insiden secara aman beserta sistem autentikasi dan manajemen pengguna/admin."
+  },
+  "servers": [
+    {
+      "url": "https://safespacebackend.vercel.app/api",
+      "description": "Production Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Endpoint terkait autentikasi pengguna dan sesi."
+    },
+    {
+      "name": "Report",
+      "description": "Endpoint terkait pembuatan dan pengelolaan laporan oleh pengguna."
+    },
+    {
+      "name": "Admin",
+      "description": "Endpoint khusus admin untuk mengelola status laporan dan profil admin."
+    },
+    {
+      "name": "User",
+      "description": "Endpoint untuk melihat dan memperbarui profil pengguna."
+    }
+  ],
+  "paths": {
+    "/auth/sign-up": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Registrasi pengguna baru",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SignUpRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Berhasil mendaftar" }
+        }
+      }
+    },
+    "/auth/sign-in": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login pengguna",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SignInRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Berhasil login" }
+        }
+      }
+    },
+    "/auth/sign-out": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Logout pengguna",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Berhasil logout" }
+        }
+      }
+    },
+    "/auth/get-user": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Mendapatkan informasi pengguna saat ini",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Informasi pengguna berhasil diambil" }
+        }
+      }
+    },
+    "/auth/get-session": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Mendapatkan informasi sesi saat ini",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Informasi sesi berhasil diambil" }
+        }
+      }
+    },
+    "/auth/update-password": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Memperbarui password pengguna",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdatePasswordRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Password berhasil diperbarui" }
+        }
+      }
+    },
+    "/auth/resend-verification-email": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Mengirim ulang email verifikasi",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EmailRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Email verifikasi berhasil dikirim" }
+        }
+      }
+    },
+    "/auth/request-password-reset": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Meminta reset password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EmailRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Instruksi reset password telah dikirim" }
+        }
+      }
+    },
+    "/report/create": {
+      "post": {
+        "tags": ["Report"],
+        "summary": "Membuat laporan baru",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateReportRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Laporan berhasil dibuat" }
+        }
+      }
+    },
+    "/report/evidence/upload-url": {
+      "post": {
+        "tags": ["Report"],
+        "summary": "Mendapatkan signed URL untuk upload bukti",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EvidenceUploadRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Signed URL berhasil di-generate" }
+        }
+      }
+    },
+    "/report/{id}": {
+      "get": {
+        "tags": ["Report"],
+        "summary": "Mendapatkan detail laporan berdasarkan ID",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID laporan"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Detail laporan" }
+        }
+      },
+      "post": {
+        "tags": ["Report"],
+        "summary": "Membatalkan laporan",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID laporan yang akan dibatalkan"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Laporan berhasil dibatalkan" }
+        }
+      }
+    },
+    "/report": {
+      "get": {
+        "tags": ["Report"],
+        "summary": "Mendapatkan semua laporan yang dibuat pengguna saat ini",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 10, "maximum": 100 }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Daftar laporan" }
+        }
+      }
+    },
+    "/admin/report": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Mendapatkan seluruh laporan yang masuk (Role Admin)",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 10, "maximum": 100 }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Daftar laporan untuk admin" }
+        }
+      }
+    },
+    "/admin/report/{id}": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Mendapatkan detail laporan",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Detail laporan spesifik" }
+        }
+      }
+    },
+    "/admin/report/{id}/status": {
+      "patch": {
+        "tags": ["Admin"],
+        "summary": "Memperbarui status laporan",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateStatusReportRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Status laporan berhasil diperbarui" }
+        }
+      }
+    },
+    "/admin/profile": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Mendapatkan profil admin",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Data profil admin" }
+        }
+      },
+      "patch": {
+        "tags": ["Admin"],
+        "summary": "Memperbarui profil admin",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateAdminProfileRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Profil admin berhasil diperbarui" }
+        }
+      }
+    },
+    "/admin/profile-picture/upload-url": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Mendapatkan signed URL untuk upload foto profil admin",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ProfilePictureUploadRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Signed URL untuk foto profil admin" }
+        }
+      }
+    },
+    "/admin/profile-picture": {
+      "patch": {
+        "tags": ["Admin"],
+        "summary": "Mengubah path foto profil admin",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateProfilePictureRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Foto profil admin berhasil diubah" }
+        }
+      }
+    },
+    "/user/profile": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Mendapatkan profil pengguna",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Data profil pengguna" }
+        }
+      },
+      "patch": {
+        "tags": ["User"],
+        "summary": "Memperbarui profil pengguna",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateUserProfileRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Profil pengguna berhasil diperbarui" }
+        }
+      }
+    },
+    "/user/profile-picture/upload-url": {
+      "post": {
+        "tags": ["User"],
+        "summary": "Mendapatkan signed URL untuk upload foto profil pengguna",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ProfilePictureUploadRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Signed URL untuk foto profil pengguna" }
+        }
+      }
+    },
+    "/user/profile-picture": {
+      "patch": {
+        "tags": ["User"],
+        "summary": "Mengubah path foto profil pengguna",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateProfilePictureRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Foto profil pengguna berhasil diubah" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "SignUpRequest": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 8, "maxLength": 50 },
+          "confirmPassword": { "type": "string", "minLength": 8, "maxLength": 50 }
+        },
+        "required": ["email", "password", "confirmPassword"]
+      },
+      "SignInRequest": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        },
+        "required": ["email", "password"]
+      },
+      "UpdatePasswordRequest": {
+        "type": "object",
+        "properties": {
+          "currentPassword": { "type": "string" },
+          "newPassword": { "type": "string", "minLength": 8, "maxLength": 50 },
+          "confirmPassword": { "type": "string", "minLength": 8, "maxLength": 50 }
+        },
+        "required": ["currentPassword", "newPassword", "confirmPassword"]
+      },
+      "EmailRequest": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "format": "email" }
+        },
+        "required": ["email"]
+      },
+      "CreateReportRequest": {
+        "type": "object",
+        "properties": {
+          "incident": { "type": "string" },
+          "date": { "type": "string", "format": "date-time" },
+          "location": { "type": "string" },
+          "incidentDesc": { "type": "string" },
+          "perpetratorDesc": { "type": "string" },
+          "evidencePaths": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["incident", "date", "location", "incidentDesc", "perpetratorDesc"]
+      },
+      "EvidenceUploadRequest": {
+        "type": "object",
+        "properties": {
+          "fileName": { "type": "string" },
+          "fileType": {
+            "type": "string",
+            "enum": ["image/jpeg", "image/png", "image/jpg", "application/pdf", "video/mp4", "video/mkv"]
+          },
+          "fileSize": { "type": "number", "maximum": 52428800 }
+        },
+        "required": ["fileName", "fileType", "fileSize"]
+      },
+      "UpdateStatusReportRequest": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["RECEIVED", "PROCESS", "REVIEW", "ASSISTANCE", "REJECTED", "DONE", "CANCELLED"]
+          }
+        },
+        "required": ["status"]
+      },
+      "UpdateAdminProfileRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 2, "maxLength": 50 },
+          "unit": { "type": "string", "minLength": 2, "maxLength": 100 }
+        },
+        "required": ["name", "unit"]
+      },
+      "UpdateUserProfileRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 2, "maxLength": 50 },
+          "phoneNumber": { "type": "string", "minLength": 1, "maxLength": 25 },
+          "nim": { "type": "string", "minLength": 10, "maxLength": 15 },
+          "department": { "type": "string", "minLength": 2, "maxLength": 100 },
+          "faculty": { "type": "string", "minLength": 2, "maxLength": 100 },
+          "enrollmentYear": { "type": "integer", "minimum": 2000 }
+        },
+        "required": ["name", "phoneNumber", "nim", "department", "faculty", "enrollmentYear"]
+      },
+      "ProfilePictureUploadRequest": {
+        "type": "object",
+        "properties": {
+          "fileName": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "fileType": {
+            "type": "string",
+            "enum": ["image/jpeg", "image/png", "image/jpg"]
+          },
+          "fileSize": { "type": "number", "maximum": 10485760 }
+        },
+        "required": ["fileName", "fileType", "fileSize"]
+      },
+      "UpdateProfilePictureRequest": {
+        "type": "object",
+        "properties": {
+          "profilePicturePath": { "type": "string" }
+        },
+        "required": ["profilePicturePath"]
+      }
+    }
+  }
+}
