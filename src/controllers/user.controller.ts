@@ -3,6 +3,7 @@ import { db } from '../db/index.js';
 import { user } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 import { updateUserProfileSchema } from '../utils/validators/user.validator.js';
+import { supabase } from '../config/supabase.js';
 
 export const getUserProfile = async (
   req: Request,
@@ -23,11 +24,28 @@ export const getUserProfile = async (
       });
     }
 
-    return res.status(200).json({
-      success: true,
-      message: 'Profil pengguna berhasil diambil',
-      data: data,
-    });
+    let profilePictureUrl = null;
+
+    if (data.profilePicturePath) {
+      const { data: urlData, error } = await supabase.storage
+        .from('profile_pictures')
+        .createSignedUrl(data.profilePicturePath, 3600);
+
+      if (error) {
+        console.error('Error generating signed URL:', error);
+      } else if (urlData) {
+        profilePictureUrl = urlData.signedUrl;
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Profil pengguna berhasil diambil',
+        data: {
+          ...data,
+          profilePictureUrl: profilePictureUrl,
+        },
+      });
+    }
   } catch (error) {
     next(error);
   }
@@ -54,7 +72,7 @@ export const updateUserProfile = async (
       });
     }
 
-    const updatedUser = await db
+    const [updatedUser] = await db
       .update(user)
       .set({
         name,
@@ -70,7 +88,7 @@ export const updateUserProfile = async (
     return res.status(200).json({
       success: true,
       message: 'Profil pengguna berhasil diperbarui',
-      data: updatedUser[0],
+      data: updatedUser,
     });
   } catch (error) {
     next(error);

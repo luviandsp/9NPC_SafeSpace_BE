@@ -2,10 +2,11 @@ import { Router } from 'express';
 import {
   createReport,
   getAllReports,
-  generateUploadSignedUrl,
   getReportById,
   cancelReport,
 } from '../controllers/report.controller.js';
+import { createSignedUrlHandler } from '../controllers/upload.controller.js';
+import { evidenceUploadSchema } from '../utils/validators/report.validator.js';
 
 const router = Router();
 
@@ -13,7 +14,10 @@ const router = Router();
 router.post('/create', createReport);
 
 // Endpoint untuk mendapatkan signed URL untuk upload bukti
-router.post('/upload-signed-url', generateUploadSignedUrl);
+router.post(
+  '/evidence/upload-url',
+  createSignedUrlHandler('evidence_assets', evidenceUploadSchema),
+);
 
 // Endpoint untuk mendapatkan detail laporan berdasarkan ID
 router.get('/:id', getReportById);

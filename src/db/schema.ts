@@ -8,7 +8,6 @@ import {
   smallint,
   boolean,
   pgEnum,
-  date,
 } from 'drizzle-orm/pg-core';
 
 export const reportStatusEnum = pgEnum('report_status_enum', [
@@ -24,7 +23,7 @@ export const reportStatusEnum = pgEnum('report_status_enum', [
 export const user = pgTable('user', {
   id: uuid('id').primaryKey(), // ID akan diambil dari Supabase Auth, jadi kita hapus defaultRandom()
   name: varchar('name', { length: 255 }),
-  profilePicture: text('profilePicture'),
+  profilePicturePath: text('profilePicturePath'),
   email: varchar('email', { length: 255 }).notNull().unique(),
   phoneNumber: varchar('phoneNumber', { length: 50 }),
   nim: varchar('nim', { length: 50 }).unique(),
@@ -39,9 +38,9 @@ export const user = pgTable('user', {
 });
 
 export const admin = pgTable('admin', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: uuid('id').primaryKey(),
   name: varchar('name', { length: 255 }),
-  profilePicture: text('profilePicture'),
+  profilePicturePath: text('profilePicturePath'),
   email: varchar('email', { length: 255 }).notNull().unique(),
   unit: varchar('unit', { length: 255 }),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
