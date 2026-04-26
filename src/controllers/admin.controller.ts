@@ -5,9 +5,10 @@ import {
   updateStatusReportSchema,
 } from '../utils/validators/report.validator.js';
 import { db } from '../db/index.js';
-import { report } from '../db/schema.js';
-import { eq, sql } from 'drizzle-orm';
+import { report, admin } from '../db/schema.js';
+import { eq, sql, count } from 'drizzle-orm';
 import supabase from '../config/supabase.js';
+import { updateAdminProfileSchema } from '../utils/validators/admin.validator.js';
 
 export const getAllReports = async (
   req: Request,
@@ -123,6 +124,7 @@ export const updateStatusReport = async (
   res: Response,
   next: NextFunction,
 ) => {
+  const adminId = req.user!.id;
   const { id } = updateStatusReportSchema.pick({ id: true }).parse(req.params);
   const { status } = updateStatusReportSchema
     .pick({ status: true })
@@ -140,11 +142,128 @@ export const updateStatusReport = async (
       });
     }
 
-    await db.update(report).set({ status: status }).where(eq(report.id, id));
+    const [updatedReport] = await db
+      .update(report)
+      .set({ adminId: adminId, status: status })
+      .where(eq(report.id, id))
+      .returning();
 
     return res.status(200).json({
       success: true,
       message: 'Status laporan berhasil diperbarui',
+      data: updatedReport,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAdminProfile = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const adminId = req.user!.id;
+
+  try {
+    const adminData = await db.query.admin.findFirst({
+      where: eq(admin.id, adminId),
+    });
+
+    if (!adminData) {
+      return res.status(404).json({
+        success: false,
+        message: 'Admin tidak ditemukan',
+      });
+    }
+
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const [
+      { data: authUser, error: authError },
+      [reportMetrics],
+      { data: urlData, error: urlError },
+    ] = await Promise.all([
+      supabase.auth.getUser(),
+
+      db
+        .select({
+          totalReports: count(),
+          totalFinishedReports: sql<number>`count(${report.id}) filter (where ${report.status} = 'DONE')::int`,
+          weeklyReports: sql<number>`count(${report.id}) filter (where ${report.createdAt} >= ${oneWeekAgo.toISOString()})::int`,
+        })
+        .from(report),
+
+      adminData.profilePicturePath
+        ? supabase.storage
+            .from('profile_pictures')
+            .createSignedUrl(adminData.profilePicturePath, 3600)
+        : Promise.resolve({ data: null, error: null }),
+    ]);
+
+    if (authError) {
+      console.error(
+        'Gagal mendapatkan data user dari Supabase:',
+        authError.message,
+      );
+    }
+
+    if (urlError) {
+      console.error('Error generating signed URL:', urlError.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profil admin berhasil diambil',
+      data: {
+        admin: adminData,
+        activity: {
+          lastLogin: authUser?.user?.last_sign_in_at || null,
+          WeeklyReportCount: reportMetrics.weeklyReports,
+        },
+        report: {
+          totalReports: reportMetrics.totalReports,
+          totalFinishedReports: reportMetrics.totalFinishedReports,
+        },
+        profilePictureUrl: urlData?.signedUrl || null,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateAdminProfile = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const adminId = req.user!.id;
+  const { name, unit } = updateAdminProfileSchema.parse(req.body);
+
+  try {
+    const existingAdmin = await db.query.admin.findFirst({
+      where: eq(admin.id, adminId),
+    });
+
+    if (!existingAdmin) {
+      return res.status(404).json({
+        success: false,
+        message: 'Admin tidak ditemukan',
+      });
+    }
+
+    const [updatedAdmin] = await db
+      .update(admin)
+      .set({ name, unit })
+      .where(eq(admin.id, adminId))
+      .returning();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profil admin berhasil diperbarui',
+      data: updatedAdmin,
     });
   } catch (error) {
     next(error);

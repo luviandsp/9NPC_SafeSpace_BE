@@ -7,7 +7,6 @@ import { and, eq, sql } from 'drizzle-orm';
 import {
   createReportSchema,
   getAllReportsSchema,
-  generateUploadSignedUrlSchema,
   getReportByIdSchema,
 } from '../utils/validators/report.validator.js';
 
@@ -92,43 +91,6 @@ export const createReport = async (
       success: true,
       message: 'Laporan berhasil dibuat',
       data: newReport,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const generateUploadSignedUrl = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  const { fileName, fileType, fileSize } = generateUploadSignedUrlSchema.parse(
-    req.body,
-  );
-  const userId = req.user!.id;
-  const safeFileName = fileName.replace(/[^a-zA-Z0-9.\-]/g, '_');
-
-  // Format: temp/{userId}/{randomId}-{fileNameAsli}
-  const path = `temp/${userId}/${nanoid(8)}-${safeFileName}`;
-
-  try {
-    const { data, error } = await supabase.storage
-      .from('evidence_assets')
-      .createSignedUploadUrl(path);
-
-    if (error) {
-      return next(error);
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: 'Presigned URL berhasil dibuat',
-      data: {
-        uploadUrl: data.signedUrl,
-        path: data.path, // Path ini yang harus disimpan klien dan dikirim saat membuat laporan
-        token: data.token,
-      },
     });
   } catch (error) {
     next(error);
@@ -269,7 +231,10 @@ export const cancelReport = async (
       });
     }
 
-    await db.update(report).set({ status: "CANCELLED" }).where(eq(report.id, id));
+    await db
+      .update(report)
+      .set({ status: 'CANCELLED' })
+      .where(eq(report.id, id));
 
     return res.status(200).json({
       success: true,

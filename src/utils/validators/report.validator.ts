@@ -14,7 +14,7 @@ export const createReportSchema = z.object({
     .optional(),
 });
 
-export const generateUploadSignedUrlSchema = z.object({
+export const evidenceUploadSchema = z.object({
   fileName: z.string().min(1, 'Nama file harus diisi').trim(),
   fileType: z.enum(
     [
@@ -29,7 +29,7 @@ export const generateUploadSignedUrlSchema = z.object({
       message: 'Tipe file tidak didukung',
     },
   ),
-  fileSize: z.number().max(10 * 1024 * 1024, 'Ukuran file maksimal 10MB'), // Maksimal 10MB
+  fileSize: z.number().max(5 * 1024 * 1024, 'Ukuran file maksimal 5MB'),
 });
 
 export const getReportByIdSchema = z.object({

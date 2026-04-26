@@ -43,6 +43,13 @@
       "when": 1777124776716,
       "tag": "0005_bored_cobalt_man",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777185428337,
+      "tag": "0006_lucky_the_executioner",
+      "breakpoints": true
     }
   ]
 }
