@@ -45,6 +45,12 @@ export const getUserProfile = async (
           profilePictureUrl: profilePictureUrl,
         },
       });
+    } else {
+      return res.status(200).json({
+        success: true,
+        message: 'Profil pengguna berhasil diambil',
+        data: data,
+      });
     }
   } catch (error) {
     next(error);
