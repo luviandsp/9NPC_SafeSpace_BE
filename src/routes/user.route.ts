@@ -6,7 +6,7 @@ import {
 import { profilePictureUploadSchema } from '../utils/validators/user.validator.js';
 import {
   createSignedUrlHandler,
-  changeProfilePictureHandler,
+  updateProfilePictureHandler,
 } from '../controllers/upload.controller.js';
 import { user } from '../db/schema.js';
 
@@ -25,6 +25,15 @@ router.post(
 );
 
 // Endpoint untuk mengubah foto profil pengguna saat ini
-router.patch('/profile-picture', changeProfilePictureHandler(user, 'Pengguna'));
+router.patch(
+  '/profile-picture',
+  updateProfilePictureHandler(user, 'USER', 'update'),
+);
+
+// Endpoint untuk menghapus foto profil pengguna saat ini
+router.delete(
+  '/profile-picture',
+  updateProfilePictureHandler(user, 'USER', 'delete'),
+);
 
 export default router;

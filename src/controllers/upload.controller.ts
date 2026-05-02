@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { nanoid } from 'nanoid';
 import supabase from '../config/supabase.js';
 import { ZodObject } from 'zod';
-import { updateProfilePictureSchema } from '../utils/validators/user.validator.js';
+import { profilePictureSchema } from '../utils/validators/user.validator.js';
 import { db } from '../db/index.js';
 import { eq } from 'drizzle-orm';
 
@@ -54,16 +54,18 @@ export const createSignedUrlHandler = (
  * Factory function untuk mengubah foto profil secara dinamis
  * @param tableSchema Objek skema tabel Drizzle (user atau admin)
  * @param roleName String untuk pesan error (misal: 'Pengguna' atau 'Admin')
+ * @param actionType String untuk menentukan jenis aksi ('update' atau 'delete')
  */
-export const changeProfilePictureHandler = (
+export const updateProfilePictureHandler = (
   tableSchema: any,
-  roleName: string,
+  roleName: 'USER' | 'ADMIN',
+  actionType: 'update' | 'delete',
 ) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user!.id;
-    const { profilePicturePath } = updateProfilePictureSchema.parse(req.body);
 
     try {
+      // 1. Cari data existing
       const [existingRecord] = await db
         .select()
         .from(tableSchema)
@@ -73,10 +75,19 @@ export const changeProfilePictureHandler = (
       if (!existingRecord) {
         return res.status(404).json({
           success: false,
-          message: `${roleName} tidak ditemukan`,
+          message: `${roleName.toLowerCase()} tidak ditemukan`,
         });
       }
 
+      if (actionType === 'delete' && !existingRecord.profilePicturePath) {
+        return res.status(200).json({
+          success: true,
+          message: `Foto profil ${roleName.toLowerCase()} sudah kosong`,
+          data: existingRecord,
+        });
+      }
+
+      // 2. Hapus foto lama di Storage (Berlaku untuk Update maupun Delete)
       if (existingRecord.profilePicturePath) {
         const { error: deleteError } = await supabase.storage
           .from('profile_pictures')
@@ -84,34 +95,52 @@ export const changeProfilePictureHandler = (
 
         if (deleteError) {
           console.error(
-            `Gagal menghapus foto profil lama ${roleName}:`,
-            deleteError,
+            `Gagal menghapus foto profil lama ${roleName.toLowerCase()}:`,
+            deleteError.message,
           );
         }
       }
 
-      const fileName = profilePicturePath.split('/').pop();
-      const permanentPath = `permanent/${userId}/${fileName}`;
+      // 3. Percabangan Logika
+      if (actionType === 'update') {
+        const { profilePicturePath } = profilePictureSchema.parse(req.body);
 
-      const { error: moveError } = await supabase.storage
-        .from('profile_pictures')
-        .move(profilePicturePath, permanentPath);
+        const fileName = profilePicturePath.split('/').pop();
+        const permanentPath = `permanent/${userId}/${fileName}`;
 
-      if (moveError) {
-        return next(moveError);
+        const { error: moveError } = await supabase.storage
+          .from('profile_pictures')
+          .move(profilePicturePath, permanentPath);
+
+        if (moveError) {
+          return next(moveError);
+        }
+
+        const [updatedRecord] = await db
+          .update(tableSchema)
+          .set({ profilePicturePath: permanentPath })
+          .where(eq(tableSchema.id, userId))
+          .returning();
+
+        return res.status(200).json({
+          success: true,
+          message: `Foto profil ${roleName.toLowerCase()} berhasil diperbarui`,
+          data: updatedRecord,
+        });
+      } else {
+        // Logika untuk aksi 'delete'
+        const [updatedRecord] = await db
+          .update(tableSchema)
+          .set({ profilePicturePath: null })
+          .where(eq(tableSchema.id, userId))
+          .returning();
+
+        return res.status(200).json({
+          success: true,
+          message: `Foto profil ${roleName.toLowerCase()} berhasil dihapus`,
+          data: updatedRecord,
+        });
       }
-
-      const [updatedRecord] = await db
-        .update(tableSchema)
-        .set({ profilePicturePath: permanentPath })
-        .where(eq(tableSchema.id, userId))
-        .returning();
-
-      return res.status(200).json({
-        success: true,
-        message: `Foto profil ${roleName.toLowerCase()} berhasil diperbarui`,
-        data: updatedRecord,
-      });
     } catch (error) {
       next(error);
     }

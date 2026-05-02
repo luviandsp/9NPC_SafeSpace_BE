@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "SafeSpace API",
-    "version": "1.1.0",
+    "version": "1.3.0",
     "description": "Dokumentasi API untuk SafeSpace Backend. Menyediakan layanan pelaporan insiden secara aman beserta sistem autentikasi dan manajemen pengguna/admin."
   },
   "servers": [
@@ -47,6 +47,23 @@
         }
       }
     },
+    "/auth/admin/sign-up": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Registrasi admin baru",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SignUpRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Berhasil mendaftar sebagai admin" }
+        }
+      }
+    },
     "/auth/sign-in": {
       "post": {
         "tags": ["Auth"],
@@ -78,7 +95,6 @@
       "get": {
         "tags": ["Auth"],
         "summary": "Mendapatkan informasi sesi saat ini",
-        "security": [{ "BearerAuth": [] }],
         "responses": {
           "200": { "description": "Informasi sesi berhasil diambil" }
         }
@@ -230,23 +246,6 @@
         }
       }
     },
-    "/admin/sign-up": {
-      "post": {
-        "tags": ["Auth"],
-        "summary": "Registrasi admin baru",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/SignUpRequest" }
-            }
-          }
-        },
-        "responses": {
-          "201": { "description": "Berhasil mendaftar sebagai admin" }
-        }
-      }
-    },
     "/admin/report": {
       "get": {
         "tags": ["Admin"],
@@ -373,6 +372,14 @@
         "responses": {
           "200": { "description": "Foto profil admin berhasil diubah" }
         }
+      },
+      "delete": {
+        "tags": ["Admin"],
+        "summary": "Menghapus foto profil admin",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Foto profil admin berhasil dihapus" }
+        }
       }
     },
     "/user/profile": {
@@ -434,6 +441,14 @@
         },
         "responses": {
           "200": { "description": "Foto profil pengguna berhasil diubah" }
+        }
+      },
+      "delete": {
+        "tags": ["User"],
+        "summary": "Menghapus foto profil pengguna",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Foto profil pengguna berhasil dihapus" }
         }
       }
     }

@@ -38,7 +38,7 @@ export const updateUserProfileSchema = z.object({
     .max(new Date().getFullYear(), 'Tahun masuk tidak boleh di masa depan'),
 });
 
-export const updateProfilePictureSchema = z.object({
+export const profilePictureSchema = z.object({
   profilePicturePath: z.string().min(1, 'Path harus diisi').trim(),
 });
 

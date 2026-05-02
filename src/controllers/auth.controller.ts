@@ -140,12 +140,12 @@ export const updatePasswordUser = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const { currentPassword, newPassword, confirmPassword } =
-    updatePasswordSchema.parse(req.body);
+  const { currentPassword, newPassword } = updatePasswordSchema.parse(req.body);
 
   try {
     const { data, error } = await supabase.auth.updateUser({
       password: newPassword,
+      current_password: currentPassword,
     });
 
     if (error) return next(error);

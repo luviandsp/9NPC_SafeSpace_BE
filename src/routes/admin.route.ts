@@ -7,12 +7,11 @@ import {
   updateStatusReport,
 } from '../controllers/admin.controller.js';
 import {
-  changeProfilePictureHandler,
+  updateProfilePictureHandler,
   createSignedUrlHandler,
 } from '../controllers/upload.controller.js';
 import { profilePictureUploadSchema } from '../utils/validators/user.validator.js';
 import { admin } from '../db/schema.js';
-import { signUp } from '../controllers/auth.controller.js';
 
 const router = Router();
 
@@ -38,6 +37,15 @@ router.post(
 );
 
 // Endpoint untuk mengubah foto profil admin saat ini
-router.patch('/profile-picture', changeProfilePictureHandler(admin, 'Admin'));
+router.patch(
+  '/profile-picture',
+  updateProfilePictureHandler(admin, 'ADMIN', 'update'),
+);
+
+// Endpoint untuk menghapus foto profil admin saat ini
+router.delete(
+  '/profile-picture',
+  updateProfilePictureHandler(admin, 'ADMIN', 'delete'),
+);
 
 export default router;
