@@ -18,6 +18,11 @@ export const signUp = async (
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          role: 'USER',
+        }
+      }
     });
 
     if (error) return next(error);
@@ -78,32 +83,32 @@ export const signOut = async (
   }
 };
 
-export const getCurrentUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
+// export const getCurrentUser = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction,
+// ) => {
+//   try {
+//     const {
+//       data: { user },
+//       error,
+//     } = await supabase.auth.getUser();
 
-    if (error) return next(error);
+//     if (error) return next(error);
 
-    if (!user) {
-      return res.status(404).json({ error: 'Pengguna tidak ditemukan' });
-    }
+//     if (!user) {
+//       return res.status(404).json({ error: 'Pengguna tidak ditemukan' });
+//     }
 
-    return res.status(200).json({
-      success: true,
-      message: 'Pengguna ditemukan',
-      data: user,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+//     return res.status(200).json({
+//       success: true,
+//       message: 'Pengguna ditemukan',
+//       data: user,
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 
 export const getCurrentSession = async (
   req: Request,

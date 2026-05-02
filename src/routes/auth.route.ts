@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import {
-  getCurrentUser,
   getCurrentSession,
   signIn,
   signOut,
@@ -23,10 +22,10 @@ router.post('/sign-in', signIn);
 router.post('/sign-out', requireAuth, signOut);
 
 // Endpoint untuk mendapatkan informasi pengguna saat ini
-router.get('/get-user', requireAuth, getCurrentUser);
+// router.get('/get-user', getCurrentUser);
 
 // Endpoint untuk mendapatkan informasi sesi saat ini
-router.get('/get-session', requireAuth, getCurrentSession);
+router.get('/get-session', getCurrentSession);
 
 // Endpoint untuk memperbarui password pengguna
 router.post('/update-password', requireAuth, updatePasswordUser);
