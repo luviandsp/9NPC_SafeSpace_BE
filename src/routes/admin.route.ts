@@ -16,9 +16,6 @@ import { signUp } from '../controllers/auth.controller.js';
 
 const router = Router();
 
-// Endpoint untuk registrasi admin
-router.post('/sign-up', signUp('ADMIN'));
-
 // Endpoint untuk admin mengelola laporan
 router.get('/report', getAllReports);
 

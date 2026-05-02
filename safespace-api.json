@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "SafeSpace API",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Dokumentasi API untuk SafeSpace Backend. Menyediakan layanan pelaporan insiden secara aman beserta sistem autentikasi dan manajemen pengguna/admin."
   },
   "servers": [

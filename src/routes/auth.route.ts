@@ -15,6 +15,9 @@ const router = Router();
 // Endpoint untuk registrasi (sign-up)
 router.post('/sign-up', signUp('USER'));
 
+// Endpoint untuk registrasi admin
+router.post('/admin/sign-up', signUp('ADMIN'));
+
 // Endpoint untuk login (sign-in)
 router.post('/sign-in', signIn);
 
