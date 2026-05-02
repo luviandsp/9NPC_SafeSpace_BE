@@ -126,7 +126,7 @@ export const getReportById = async (
 
     let finalEvidenceAssets = reportData.evidenceAssets.map((asset) => ({
       ...asset,
-      signedUrl: null as string | null, // Default null untuk TypeScript
+      assetUrl: null as string | null, // Default null untuk TypeScript
     }));
 
     if (pathsToSign.length > 0) {
@@ -145,7 +145,7 @@ export const getReportById = async (
 
           return {
             ...asset,
-            signedUrl: matchedUrlData?.signedUrl || null,
+            assetUrl: matchedUrlData?.signedUrl || null,
           };
         });
       }
