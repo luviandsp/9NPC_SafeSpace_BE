@@ -13,7 +13,7 @@ import { requireAuth } from '../middlewares/auth.middleware.js';
 const router = Router();
 
 // Endpoint untuk registrasi (sign-up)
-router.post('/sign-up', signUp);
+router.post('/sign-up', signUp('USER'));
 
 // Endpoint untuk login (sign-in)
 router.post('/sign-in', signIn);

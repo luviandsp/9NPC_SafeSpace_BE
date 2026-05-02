@@ -40,13 +40,9 @@ export const requireAdmin = async (
     return res.status(401).json({ success: false, message: 'Unauthorized' });
   }
 
-  const { data: profileData, error: profileError } = await supabase
-    .from('admin')
-    .select()
-    .eq('id', data.user.id)
-    .single();
+  const adminRole = data.user.user_metadata?.role;
 
-  if (profileError || !profileData) {
+  if (adminRole !== 'ADMIN') {
     return res.status(403).json({ success: false, message: 'Forbidden' });
   }
 

@@ -74,16 +74,6 @@
         }
       }
     },
-    "/auth/get-user": {
-      "get": {
-        "tags": ["Auth"],
-        "summary": "Mendapatkan informasi pengguna saat ini",
-        "security": [{ "BearerAuth": [] }],
-        "responses": {
-          "200": { "description": "Informasi pengguna berhasil diambil" }
-        }
-      }
-    },
     "/auth/get-session": {
       "get": {
         "tags": ["Auth"],
@@ -237,6 +227,23 @@
         ],
         "responses": {
           "200": { "description": "Daftar laporan" }
+        }
+      }
+    },
+    "/admin/sign-up": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Registrasi admin baru",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SignUpRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Berhasil mendaftar sebagai admin" }
         }
       }
     },

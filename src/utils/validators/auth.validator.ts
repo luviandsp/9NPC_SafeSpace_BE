@@ -11,10 +11,9 @@ export const signUpSchema = z
         const hasUpperCase = /[A-Z]/.test(value);
         const hasLowerCase = /[a-z]/.test(value);
         const hasNumber = /\d/.test(value);
-        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(value);
 
-        return hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
-      }, 'Password harus mengandung huruf besar, huruf kecil, angka, dan karakter khusus')
+        return hasUpperCase && hasLowerCase && hasNumber;
+      }, 'Password harus mengandung huruf besar, huruf kecil, dan angka')
       .trim(),
     confirmPassword: z
       .string()
@@ -43,10 +42,9 @@ export const updatePasswordSchema = z
         const hasUpperCase = /[A-Z]/.test(value);
         const hasLowerCase = /[a-z]/.test(value);
         const hasNumber = /\d/.test(value);
-        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(value);
 
-        return hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
-      }, 'Password baru harus mengandung huruf besar, huruf kecil, angka, dan karakter khusus')
+        return hasUpperCase && hasLowerCase && hasNumber;
+      }, 'Password baru harus mengandung huruf besar, huruf kecil, dan angka')
       .trim(),
     confirmPassword: z
       .string()

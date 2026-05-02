@@ -7,36 +7,34 @@ import {
   updatePasswordSchema,
 } from '../utils/validators/auth.validator.js';
 
-export const signUp = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  const { email, password } = signUpSchema.parse(req.body);
+export const signUp = (role: 'USER' | 'ADMIN' = 'USER') => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const { email, password } = signUpSchema.parse(req.body);
 
-  try {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          role: 'USER',
-        }
-      }
-    });
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            role: role,
+          },
+        },
+      });
 
-    if (error) return next(error);
+      if (error) return next(error);
 
-    return res.status(201).json({
-      success: true,
-      message:
-        'Registrasi berhasil. Profil dasar telah dibuat. Silakan cek email Anda untuk verifikasi.',
-      // Trigger di database akan menangani pembuatan profil di tabel 'user'
-      data: data.user,
-    });
-  } catch (error) {
-    next(error);
-  }
+      return res.status(201).json({
+        success: true,
+        message:
+          'Registrasi berhasil. Profil dasar telah dibuat. Silakan cek email Anda untuk verifikasi.',
+        // Trigger di database akan menangani pembuatan profil di tabel 'user'
+        data: data.user,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 };
 
 export const signIn = async (
