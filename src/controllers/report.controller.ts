@@ -3,7 +3,7 @@ import { db } from '../db/index.js';
 import { report, evidenceAsset } from '../db/schema.js';
 import { nanoid } from 'nanoid';
 import supabase from '../config/supabase.js';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, ilike, or, sql } from 'drizzle-orm';
 import {
   createReportSchema,
   getAllReportsSchema,
@@ -171,14 +171,25 @@ export const getAllReports = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const { page, limit } = getAllReportsSchema.parse(req.query);
+  const { page, limit, search } = getAllReportsSchema.parse(req.query);
 
   const userId = req.user!.id;
   const offset = (page - 1) * limit;
 
+  const searchTerm = search ? `%${search}%` : null;
+  const whereClause = searchTerm
+    ? and(
+        eq(report.userId, userId),
+        or(
+          ilike(report.incident, searchTerm),
+          ilike(report.incidentDesc, searchTerm),
+        ),
+      )
+    : eq(report.userId, userId);
+
   try {
     const reports = await db.query.report.findMany({
-      where: eq(report.userId, userId),
+      where: whereClause,
       limit: limit,
       offset: offset,
       orderBy: (reports, { desc }) => [desc(reports.createdAt)],
@@ -190,7 +201,7 @@ export const getAllReports = async (
     const [totalResult] = await db
       .select({ count: sql<number>`cast(count(${report.id}) as int)` })
       .from(report)
-      .where(eq(report.userId, userId));
+      .where(whereClause);
 
     const total = totalResult.count;
     const totalPages = Math.ceil(total / limit);

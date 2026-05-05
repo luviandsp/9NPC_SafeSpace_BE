@@ -46,6 +46,7 @@ export const getAllReportsSchema = z.object({
     .min(1, 'Limit harus lebih besar dari 0')
     .max(100, 'Limit maksimal adalah 100')
     .default(10),
+  search: z.string().trim().optional(),
 });
 
 export const updateStatusReportSchema = z.object({
