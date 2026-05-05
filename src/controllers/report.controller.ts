@@ -5,6 +5,7 @@ import { nanoid } from 'nanoid';
 import supabase from '../config/supabase.js';
 import { and, eq, ilike, or, sql } from 'drizzle-orm';
 import {
+  addEvidenceSchema,
   createReportSchema,
   getAllReportsSchema,
   getReportByIdSchema,
@@ -216,6 +217,67 @@ export const getAllReports = async (
         total: total,
         totalPages: totalPages,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addEvidence = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { id } = getReportByIdSchema.parse(req.params);
+  const { evidencePaths } = addEvidenceSchema.parse(req.body);
+
+  try {
+    const existingReport = await db.query.report.findFirst({
+      where: eq(report.id, id),
+    });
+
+    if (!existingReport) {
+      return res.status(404).json({
+        success: false,
+        message: 'Laporan tidak ditemukan',
+      });
+    }
+
+    if (existingReport.userId !== req.user!.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Anda tidak memiliki akses ke laporan ini',
+      });
+    }
+
+    const newEvidenceData: { reportId: string; evidencePath: string }[] = [];
+
+    for (const tempPath of evidencePaths) {
+      const fileName = tempPath.split('/').pop();
+      const permanentPath = `permanent/${id}/${fileName}`;
+
+      const { error: moveError } = await supabase.storage
+        .from('evidence_assets')
+        .move(tempPath, permanentPath);
+
+      if (moveError) {
+        throw new Error(`Gagal memindahkan file bukti: ${moveError.message}`);
+      }
+
+      newEvidenceData.push({ reportId: id, evidencePath: permanentPath });
+    }
+
+    await db.insert(evidenceAsset).values(newEvidenceData);
+
+    const updatedReport = await db.query.report.findFirst({
+      where: eq(report.id, id),
+      with: { evidenceAssets: true },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Bukti berhasil ditambahkan',
+      data: updatedReport,
     });
   } catch (error) {
     next(error);

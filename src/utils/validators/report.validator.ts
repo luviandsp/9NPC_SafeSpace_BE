@@ -49,6 +49,13 @@ export const getAllReportsSchema = z.object({
   search: z.string().trim().optional(),
 });
 
+export const addEvidenceSchema = z.object({
+  evidencePaths: z
+    .array(z.string().min(1, 'Path bukti harus diisi'))
+    .min(1, 'Minimal 1 bukti harus disertakan')
+    .max(5, 'Maksimal 5 bukti per request'),
+});
+
 export const updateStatusReportSchema = z.object({
   id: z.uuid('ID harus berupa UUID valid').min(1, 'ID harus diisi').trim(),
   status: z.enum(
