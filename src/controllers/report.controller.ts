@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import PDFDocument from 'pdfkit';
 import { db } from '../db/index.js';
-import { report, evidenceAsset } from '../db/schema.js';
+import { report, evidenceAsset, reportStatusHistory, user as userTable, admin as adminTable } from '../db/schema.js';
 import { nanoid } from 'nanoid';
 import supabase from '../config/supabase.js';
-import { and, eq, ilike, or, sql } from 'drizzle-orm';
+import { and, eq, ilike, inArray, or, sql } from 'drizzle-orm';
 import { generateReportPdf } from '../utils/pdf.utils.js';
+import { recordStatusHistory } from '../utils/history.utils.js';
 import {
   addEvidenceSchema,
   createReportSchema,
@@ -88,6 +89,14 @@ export const createReport = async (
       }
 
       return [insertedReport];
+    });
+
+    await recordStatusHistory({
+      reportId: newReport.id,
+      oldStatus: null,
+      newStatus: 'RECEIVED',
+      changedBy: req.user!.id,
+      changedByRole: 'USER',
     });
 
     return res.status(201).json({
@@ -332,6 +341,82 @@ export const addEvidence = async (
   }
 };
 
+export const getReportHistory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { id } = getReportByIdSchema.parse(req.params);
+
+  try {
+    const existingReport = await db.query.report.findFirst({
+      where: eq(report.id, id),
+    });
+
+    if (!existingReport) {
+      return res.status(404).json({
+        success: false,
+        message: 'Laporan tidak ditemukan',
+      });
+    }
+
+    const isOwner = existingReport.userId === req.user!.id;
+    const isAdmin = req.user!.user_metadata?.role === 'ADMIN';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Anda tidak memiliki akses ke laporan ini',
+      });
+    }
+
+    const history = await db
+      .select()
+      .from(reportStatusHistory)
+      .where(eq(reportStatusHistory.reportId, id))
+      .orderBy(sql`${reportStatusHistory.createdAt} desc`);
+
+    const changedByIds = [
+      ...new Set(history.map((h) => h.changedBy).filter(Boolean) as string[]),
+    ];
+
+    const nameMap = new Map<string, string>();
+
+    if (changedByIds.length > 0) {
+      const [users, admins] = await Promise.all([
+        db
+          .select({ id: userTable.id, name: userTable.name })
+          .from(userTable)
+          .where(inArray(userTable.id, changedByIds)),
+        db
+          .select({ id: adminTable.id, name: adminTable.name })
+          .from(adminTable)
+          .where(inArray(adminTable.id, changedByIds)),
+      ]);
+
+      for (const u of users) {
+        if (u.name) nameMap.set(u.id, u.name);
+      }
+      for (const a of admins) {
+        if (a.name) nameMap.set(a.id, a.name);
+      }
+    }
+
+    const data = history.map((h) => ({
+      ...h,
+      changedByName: h.changedBy ? (nameMap.get(h.changedBy) ?? null) : null,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      message: 'Riwayat status laporan berhasil diambil',
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const cancelReport = async (
   req: Request,
   res: Response,
@@ -352,10 +437,20 @@ export const cancelReport = async (
       });
     }
 
-    await db
-      .update(report)
-      .set({ status: 'CANCELLED' })
-      .where(eq(report.id, id));
+    if (existingReport.status !== 'CANCELLED') {
+      await db
+        .update(report)
+        .set({ status: 'CANCELLED' })
+        .where(eq(report.id, id));
+
+      await recordStatusHistory({
+        reportId: id,
+        oldStatus: existingReport.status,
+        newStatus: 'CANCELLED',
+        changedBy: userId,
+        changedByRole: 'USER',
+      });
+    }
 
     return res.status(200).json({
       success: true,

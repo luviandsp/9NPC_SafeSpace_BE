@@ -100,6 +100,19 @@ export const evidenceAsset = pgTable('evidence_asset', {
     .$onUpdate(() => new Date()),
 });
 
+export const reportStatusHistory = pgTable('report_status_history', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  reportId: uuid('reportId')
+    .notNull()
+    .references(() => report.id, { onDelete: 'cascade' }),
+  oldStatus: reportStatusEnum('oldStatus'),
+  newStatus: reportStatusEnum('newStatus').notNull(),
+  changedBy: uuid('changedBy'),
+  changedByRole: varchar('changedByRole', { length: 10 }).notNull(),
+  notes: text('notes'),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+});
+
 export const evidenceAssetRelations = relations(evidenceAsset, ({ one }) => ({
   report: one(report, {
     fields: [evidenceAsset.reportId],
@@ -117,7 +130,18 @@ export const reportRelations = relations(report, ({ one, many }) => ({
     references: [admin.id],
   }),
   evidenceAssets: many(evidenceAsset),
+  statusHistory: many(reportStatusHistory),
 }));
+
+export const reportStatusHistoryRelations = relations(
+  reportStatusHistory,
+  ({ one }) => ({
+    report: one(report, {
+      fields: [reportStatusHistory.reportId],
+      references: [report.id],
+    }),
+  }),
+);
 
 export const preferenceRelations = relations(preference, ({ one }) => ({
   user: one(user, {

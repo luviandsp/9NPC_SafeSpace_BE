@@ -6,6 +6,7 @@ import {
   downloadReport,
   getAllReports,
   getReportById,
+  getReportHistory,
 } from '../controllers/report.controller.js';
 import { createSignedUrlHandler } from '../controllers/upload.controller.js';
 import { requireAuth } from '../middlewares/auth.middleware.js';
@@ -24,6 +25,9 @@ router.post(
 
 // Endpoint untuk download laporan dalam format PDF
 router.get('/:id/download', requireAuth, downloadReport);
+
+// Endpoint untuk melihat riwayat status laporan
+router.get('/:id/history', requireAuth, getReportHistory);
 
 // Endpoint untuk menambah bukti ke laporan yang sudah ada
 router.post('/:id/evidence', addEvidence);
