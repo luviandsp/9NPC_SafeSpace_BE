@@ -57,6 +57,13 @@
       "when": 1778058311248,
       "tag": "0007_tan_glorian",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1778072898899,
+      "tag": "0008_marvelous_shriek",
+      "breakpoints": true
     }
   ]
 }
