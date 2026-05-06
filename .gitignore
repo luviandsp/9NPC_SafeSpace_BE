@@ -1,3 +1,10 @@
 node_modules/
 .env
 .DS_Store
+# TypeScript build output (jangan commit, generated dari src .ts)
+src/**/*.js
+src/**/*.js.map
+src/**/*.d.ts
+
+# Vercel local
+.vercel
