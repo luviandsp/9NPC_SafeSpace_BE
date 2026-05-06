@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
+import PDFDocument from 'pdfkit';
 import { db } from '../db/index.js';
 import { report, evidenceAsset } from '../db/schema.js';
 import { nanoid } from 'nanoid';
 import supabase from '../config/supabase.js';
 import { and, eq, ilike, or, sql } from 'drizzle-orm';
+import { generateReportPdf } from '../utils/pdf.utils.js';
 import {
   addEvidenceSchema,
   createReportSchema,
@@ -218,6 +220,52 @@ export const getAllReports = async (
         totalPages: totalPages,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const downloadReport = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { id } = getReportByIdSchema.parse(req.params);
+
+  try {
+    const reportData = await db.query.report.findFirst({
+      where: eq(report.id, id),
+      with: { evidenceAssets: true },
+    });
+
+    if (!reportData) {
+      return res.status(404).json({
+        success: false,
+        message: 'Laporan tidak ditemukan',
+      });
+    }
+
+    const isOwner = reportData.userId === req.user!.id;
+    const isAdmin = req.user!.user_metadata?.role === 'ADMIN';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Anda tidak memiliki akses ke laporan ini',
+      });
+    }
+
+    const safeCode = reportData.reportCode.replace(/[^a-zA-Z0-9-]/g, '_');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="laporan-${safeCode}.pdf"`,
+    );
+
+    const doc = new PDFDocument({ margin: 50 });
+    doc.pipe(res);
+    generateReportPdf(doc, reportData);
+    doc.end();
   } catch (error) {
     next(error);
   }

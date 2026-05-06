@@ -3,10 +3,12 @@ import {
   addEvidence,
   cancelReport,
   createReport,
+  downloadReport,
   getAllReports,
   getReportById,
 } from '../controllers/report.controller.js';
 import { createSignedUrlHandler } from '../controllers/upload.controller.js';
+import { requireAuth } from '../middlewares/auth.middleware.js';
 import { evidenceUploadSchema } from '../utils/validators/report.validator.js';
 
 const router = Router();
@@ -19,6 +21,9 @@ router.post(
   '/evidence/upload-url',
   createSignedUrlHandler('evidence_assets', evidenceUploadSchema),
 );
+
+// Endpoint untuk download laporan dalam format PDF
+router.get('/:id/download', requireAuth, downloadReport);
 
 // Endpoint untuk menambah bukti ke laporan yang sudah ada
 router.post('/:id/evidence', addEvidence);
