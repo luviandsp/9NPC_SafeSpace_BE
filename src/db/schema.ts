@@ -8,6 +8,7 @@ import {
   smallint,
   boolean,
   pgEnum,
+  index,
 } from 'drizzle-orm/pg-core';
 
 export const reportStatusEnum = pgEnum('report_status_enum', [
@@ -99,6 +100,27 @@ export const evidenceAsset = pgTable('evidence_asset', {
     .defaultNow()
     .$onUpdate(() => new Date()),
 });
+
+export const notification = pgTable(
+  'notification',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    recipientId: uuid('recipientId').notNull(),
+    recipientRole: varchar('recipientRole', { length: 10 }).notNull(),
+    type: varchar('type', { length: 50 }).notNull(),
+    title: varchar('title', { length: 255 }).notNull(),
+    message: text('message').notNull(),
+    relatedId: uuid('relatedId'),
+    isRead: boolean('isRead').notNull().default(false),
+    createdAt: timestamp('createdAt').notNull().defaultNow(),
+  },
+  (table) => [
+    index('notification_recipient_idx').on(
+      table.recipientId,
+      table.recipientRole,
+    ),
+  ],
+);
 
 export const reportStatusHistory = pgTable('report_status_history', {
   id: uuid('id').defaultRandom().primaryKey(),

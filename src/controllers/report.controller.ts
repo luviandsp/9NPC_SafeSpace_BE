@@ -7,6 +7,7 @@ import supabase from '../config/supabase.js';
 import { and, eq, ilike, inArray, or, sql } from 'drizzle-orm';
 import { generateReportPdf } from '../utils/pdf.utils.js';
 import { recordStatusHistory } from '../utils/history.utils.js';
+import { createNotificationsForAdmins } from '../utils/notification.utils.js';
 import {
   addEvidenceSchema,
   createReportSchema,
@@ -97,6 +98,13 @@ export const createReport = async (
       newStatus: 'RECEIVED',
       changedBy: req.user!.id,
       changedByRole: 'USER',
+    });
+
+    await createNotificationsForAdmins({
+      type: 'NEW_REPORT_SUBMITTED',
+      title: 'Laporan Baru Masuk',
+      message: `Laporan baru dengan kode ${newReport.reportCode} telah diajukan.`,
+      relatedId: newReport.id,
     });
 
     return res.status(201).json({
@@ -449,6 +457,13 @@ export const cancelReport = async (
         newStatus: 'CANCELLED',
         changedBy: userId,
         changedByRole: 'USER',
+      });
+
+      await createNotificationsForAdmins({
+        type: 'REPORT_CANCELLED',
+        title: 'Laporan Dibatalkan',
+        message: `Laporan dengan kode ${existingReport.reportCode} telah dibatalkan oleh pelapor.`,
+        relatedId: id,
       });
     }
 

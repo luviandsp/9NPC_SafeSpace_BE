@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "SafeSpace API",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "description": "Dokumentasi API untuk SafeSpace Backend. Menyediakan layanan pelaporan insiden secara aman beserta sistem autentikasi dan manajemen pengguna/admin."
   },
   "servers": [
@@ -27,6 +27,10 @@
     {
       "name": "User",
       "description": "Endpoint untuk melihat dan memperbarui profil pengguna."
+    },
+    {
+      "name": "Notification",
+      "description": "Endpoint untuk melihat dan mengelola notifikasi pengguna dan admin."
     }
   ],
   "paths": {
@@ -239,10 +243,139 @@
             "name": "limit",
             "in": "query",
             "schema": { "type": "integer", "default": 10, "maximum": 100 }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Cari berdasarkan jenis insiden atau deskripsi insiden"
           }
         ],
         "responses": {
-          "200": { "description": "Daftar laporan" }
+          "200": { "description": "Daftar laporan" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/report/{id}/evidence": {
+      "post": {
+        "tags": ["Report"],
+        "summary": "Tambah bukti ke laporan yang sudah ada",
+        "description": "Memindahkan file dari `temp/` ke `permanent/<reportId>/` dan menyimpan path baru ke tabel `evidence_asset`. Bukti lama tidak dihapus. Hanya pemilik laporan yang dapat mengakses endpoint ini.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID laporan"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AddEvidenceRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bukti berhasil ditambahkan. Mengembalikan laporan beserta seluruh evidence terbaru.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Bukti berhasil ditambahkan",
+                  "data": { "id": "uuid", "reportCode": "RPT-xxxx", "evidenceAssets": [] }
+                }
+              }
+            }
+          },
+          "400": { "description": "Validasi gagal — evidencePaths kosong atau lebih dari 5 item" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden — bukan pemilik laporan" },
+          "404": { "description": "Laporan tidak ditemukan" }
+        }
+      }
+    },
+    "/report/{id}/download": {
+      "get": {
+        "tags": ["Report"],
+        "summary": "Download laporan dalam format PDF",
+        "description": "Menghasilkan PDF yang berisi semua detail laporan dan daftar nama file bukti. Pemilik laporan atau admin dapat mengakses endpoint ini.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID laporan"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File PDF laporan",
+            "headers": {
+              "Content-Disposition": {
+                "schema": { "type": "string" },
+                "example": "attachment; filename=\"laporan-RPT-xxxx.pdf\""
+              }
+            },
+            "content": {
+              "application/pdf": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "400": { "description": "ID bukan UUID valid" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden — bukan pemilik laporan dan bukan admin" },
+          "404": { "description": "Laporan tidak ditemukan" }
+        }
+      }
+    },
+    "/report/{id}/history": {
+      "get": {
+        "tags": ["Report"],
+        "summary": "Lihat riwayat perubahan status laporan",
+        "description": "Mengembalikan timeline perubahan status laporan urut dari terbaru. Setiap entri menyertakan `changedByName` yang di-resolve dari tabel `user` atau `admin`. Hanya pemilik laporan atau admin yang dapat mengakses.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID laporan"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Riwayat status laporan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ReportStatusHistory" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "ID bukan UUID valid" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden — bukan pemilik laporan dan bukan admin" },
+          "404": { "description": "Laporan tidak ditemukan" }
         }
       }
     },
@@ -451,6 +584,121 @@
           "200": { "description": "Foto profil pengguna berhasil dihapus" }
         }
       }
+    },
+    "/notifications": {
+      "get": {
+        "tags": ["Notification"],
+        "summary": "Ambil daftar notifikasi",
+        "description": "Mengembalikan notifikasi milik user atau admin yang sedang login, urut dari terbaru. Role ditentukan otomatis dari JWT. Filter `unread=true` untuk notifikasi yang belum dibaca saja.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 10, "maximum": 100 }
+          },
+          {
+            "name": "unread",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["true"] },
+            "description": "Jika diisi `true`, hanya kembalikan notifikasi yang belum dibaca"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar notifikasi beserta info pagination",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedNotificationsResponse" }
+              }
+            }
+          },
+          "400": { "description": "Validasi query parameter gagal" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/notifications/unread-count": {
+      "get": {
+        "tags": ["Notification"],
+        "summary": "Ambil jumlah notifikasi yang belum dibaca",
+        "description": "Mengembalikan total notifikasi yang belum dibaca milik user atau admin yang sedang login. Digunakan untuk menampilkan badge.",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Jumlah notifikasi belum dibaca",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnreadCountResponse" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/notifications/read-all": {
+      "patch": {
+        "tags": ["Notification"],
+        "summary": "Tandai semua notifikasi sebagai dibaca",
+        "description": "Mengubah `isRead` menjadi `true` untuk semua notifikasi milik user atau admin yang sedang login. Mengembalikan jumlah baris yang diperbarui.",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Semua notifikasi berhasil ditandai sebagai dibaca",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MarkAllReadResponse" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/notifications/{id}/read": {
+      "patch": {
+        "tags": ["Notification"],
+        "summary": "Tandai satu notifikasi sebagai dibaca",
+        "description": "Mengubah `isRead` menjadi `true` untuk notifikasi dengan ID yang diberikan. Hanya pemilik notifikasi yang dapat mengaksesnya.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID notifikasi"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notifikasi berhasil ditandai sebagai dibaca",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "data": { "$ref": "#/components/schemas/Notification" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "ID bukan UUID valid" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden — bukan pemilik notifikasi" },
+          "404": { "description": "Notifikasi tidak ditemukan" }
+        }
+      }
     }
   },
   "components": {
@@ -570,6 +818,122 @@
           "profilePicturePath": { "type": "string" }
         },
         "required": ["profilePicturePath"]
+      },
+      "AddEvidenceRequest": {
+        "type": "object",
+        "properties": {
+          "evidencePaths": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1,
+            "maxItems": 5,
+            "description": "Array path file bukti dari Supabase Storage (hasil upload ke temp/). Minimal 1, maksimal 5 per request."
+          }
+        },
+        "required": ["evidencePaths"]
+      },
+      "ReportStatusHistory": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "reportId": { "type": "string", "format": "uuid" },
+          "oldStatus": {
+            "type": "string",
+            "enum": ["RECEIVED", "PROCESS", "REVIEW", "ASSISTANCE", "REJECTED", "DONE", "CANCELLED"],
+            "nullable": true,
+            "description": "Status sebelum perubahan. Null untuk entri pertama saat laporan dibuat."
+          },
+          "newStatus": {
+            "type": "string",
+            "enum": ["RECEIVED", "PROCESS", "REVIEW", "ASSISTANCE", "REJECTED", "DONE", "CANCELLED"]
+          },
+          "changedBy": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "UUID user atau admin yang melakukan perubahan."
+          },
+          "changedByRole": {
+            "type": "string",
+            "enum": ["USER", "ADMIN", "SYSTEM"]
+          },
+          "changedByName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Nama changedBy yang di-resolve dari tabel user atau admin. Null jika belum mengisi profil."
+          },
+          "notes": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Notification": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "recipientId": { "type": "string", "format": "uuid" },
+          "recipientRole": { "type": "string", "enum": ["USER", "ADMIN"] },
+          "type": {
+            "type": "string",
+            "enum": ["NEW_REPORT_SUBMITTED", "REPORT_STATUS_CHANGED", "REPORT_CANCELLED"],
+            "description": "Jenis event yang memicu notifikasi."
+          },
+          "title": { "type": "string" },
+          "message": { "type": "string" },
+          "relatedId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "ID laporan yang terkait dengan notifikasi ini."
+          },
+          "isRead": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PaginatedNotificationsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Notification" }
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "size": { "type": "integer" },
+              "page": { "type": "integer" },
+              "total": { "type": "integer" },
+              "totalPages": { "type": "integer" }
+            }
+          }
+        }
+      },
+      "UnreadCountResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "count": { "type": "integer", "description": "Jumlah notifikasi yang belum dibaca" }
+            }
+          }
+        }
+      },
+      "MarkAllReadResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "count": { "type": "integer", "description": "Jumlah notifikasi yang berhasil ditandai sebagai dibaca" }
+            }
+          }
+        }
       }
     }
   }

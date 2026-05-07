@@ -47,9 +47,13 @@ src/
 │   ├── index.ts               # Drizzle client (PostgreSQL)
 │   └── schema.ts              # All table definitions and relations
 ├── middlewares/auth.middleware.ts   # requireAuth / requireAdmin (JWT from Bearer header)
-├── routes/                    # auth, report, user, admin route files
-├── controllers/               # auth, report, user, admin, upload controllers
-└── utils/validators/          # Zod validation schemas per feature
+├── routes/                    # auth, report, user, admin, notification route files
+├── controllers/               # auth, report, user, admin, upload, notification controllers
+└── utils/
+    ├── validators/            # Zod validation schemas per feature
+    ├── pdf.utils.ts           # generateReportPdf — writes report fields to a PDFDocument
+    ├── history.utils.ts       # recordStatusHistory — inserts to report_status_history (try-catch wrapped)
+    └── notification.utils.ts  # createNotification / createNotificationsForAdmins (try-catch wrapped)
 ```
 
 **Route prefixes:**
@@ -57,16 +61,21 @@ src/
 - `/api/report` — requires `requireAuth`
 - `/api/user` — requires `requireAuth`
 - `/api/admin` — requires `requireAdmin` (checks `user_metadata.role === 'ADMIN'`)
+- `/api/notifications` — requires `requireAuth` (works for both user and admin)
 
 ## Database Schema
 
 Drizzle ORM with PostgreSQL (Supabase). Migrations live in `supabase/migrations/`.
 
-Key tables: `user`, `admin`, `report`, `evidence_asset`, `preference`
+Key tables: `user`, `admin`, `report`, `evidence_asset`, `preference`, `report_status_history`, `notification`
 
 Report status enum: `RECEIVED → PROCESS → REVIEW → ASSISTANCE → DONE` (or `REJECTED` / `CANCELLED`)
 
-Relations: User → Reports (cascade delete) → EvidenceAssets (cascade delete); User/Admin → one Preference
+Relations: User → Reports (cascade delete) → EvidenceAssets (cascade delete); Report → StatusHistory (cascade delete); User/Admin → one Preference
+
+**`report_status_history`** — auto-recorded on every status change. Fields: `reportId` (FK), `oldStatus` (null on first record), `newStatus`, `changedBy` (plain UUID, no FK — can be user or admin), `changedByRole` (`USER`/`ADMIN`/`SYSTEM`), `notes`, `createdAt`. Insert is try-catch wrapped so failures never break the main operation.
+
+**`notification`** — fan-out notifications for key events. Fields: `recipientId` (plain UUID, no FK), `recipientRole` (`USER`/`ADMIN`), `type`, `title`, `message`, `relatedId` (nullable report ID), `isRead` (default false), `createdAt`. Composite index on `(recipientId, recipientRole)`. Insert is try-catch wrapped.
 
 ## File Upload Pattern
 
@@ -90,6 +99,32 @@ All request bodies pass through Zod validators before reaching controllers. Erro
 - Prettier: single quotes, trailing commas, 80-char width, 2-space indent
 - Database enum values and report status use `UPPER_SNAKE_CASE`
 - Uploaded file names are sanitized: non-alphanumeric chars replaced with `_`
+
+## Report Endpoints (beyond CRUD)
+
+These endpoints extend `POST /api/report/create` and are all under `/api/report`:
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/:id/evidence` | Add evidence to an existing report. Body: `{ evidencePaths: string[] }` (min 1, max 5). Moves files from `temp/` to `permanent/<reportId>/`. Owner only. |
+| `GET` | `/:id/download` | Stream report as PDF (pdfkit). Owner or admin. Filename: `laporan-<reportCode>.pdf`. |
+| `GET` | `/:id/history` | Return status change timeline DESC. Each row includes `changedByName` resolved from `user`/`admin` tables. Owner or admin. |
+
+## Notification Endpoints
+
+All under `/api/notifications`, requires `requireAuth`:
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/` | List notifications for the logged-in user/admin. Query params: `?page`, `?limit`, `?unread=true`. |
+| `GET` | `/unread-count` | Return `{ count: number }` of unread notifications. |
+| `PATCH` | `/read-all` | Mark all notifications as read. Returns `{ count: number }` of rows updated. |
+| `PATCH` | `/:id/read` | Mark a single notification as read. Owner only (403 otherwise). |
+
+**Auto-notification triggers:**
+- User creates report → notify all admins (`NEW_REPORT_SUBMITTED`)
+- Admin updates status → notify report owner (`REPORT_STATUS_CHANGED`)
+- User cancels report → notify all admins (`REPORT_CANCELLED`)
 
 ## API Specification
 
