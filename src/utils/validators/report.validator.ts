@@ -46,6 +46,14 @@ export const getAllReportsSchema = z.object({
     .min(1, 'Limit harus lebih besar dari 0')
     .max(100, 'Limit maksimal adalah 100')
     .default(10),
+  search: z.string().trim().optional(),
+});
+
+export const addEvidenceSchema = z.object({
+  evidencePaths: z
+    .array(z.string().min(1, 'Path bukti harus diisi'))
+    .min(1, 'Minimal 1 bukti harus disertakan')
+    .max(5, 'Maksimal 5 bukti per request'),
 });
 
 export const updateStatusReportSchema = z.object({

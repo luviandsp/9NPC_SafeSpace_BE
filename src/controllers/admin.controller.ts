@@ -7,6 +7,8 @@ import {
 import { db } from '../db/index.js';
 import { report, admin } from '../db/schema.js';
 import { eq, sql, count } from 'drizzle-orm';
+import { recordStatusHistory } from '../utils/history.utils.js';
+import { createNotification } from '../utils/notification.utils.js';
 import supabase from '../config/supabase.js';
 import { updateAdminProfileSchema } from '../utils/validators/admin.validator.js';
 
@@ -142,11 +144,36 @@ export const updateStatusReport = async (
       });
     }
 
+    if (existingReport.status === status) {
+      return res.status(200).json({
+        success: true,
+        message: 'Status laporan tidak berubah',
+        data: existingReport,
+      });
+    }
+
     const [updatedReport] = await db
       .update(report)
       .set({ adminId: adminId, status: status })
       .where(eq(report.id, id))
       .returning();
+
+    await recordStatusHistory({
+      reportId: id,
+      oldStatus: existingReport.status,
+      newStatus: status,
+      changedBy: adminId,
+      changedByRole: 'ADMIN',
+    });
+
+    await createNotification({
+      recipientId: existingReport.userId,
+      recipientRole: 'USER',
+      type: 'REPORT_STATUS_CHANGED',
+      title: 'Status Laporan Diperbarui',
+      message: `Status laporan ${existingReport.reportCode} telah diubah menjadi ${status}.`,
+      relatedId: id,
+    });
 
     return res.status(200).json({
       success: true,
