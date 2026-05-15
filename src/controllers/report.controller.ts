@@ -1,7 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import PDFDocument from 'pdfkit';
 import { db } from '../db/index.js';
-import { report, evidenceAsset, reportStatusHistory, user as userTable, admin as adminTable } from '../db/schema.js';
+import {
+  report,
+  evidenceAsset,
+  reportStatusHistory,
+  user as userTable,
+  admin as adminTable,
+} from '../db/schema.js';
 import { nanoid } from 'nanoid';
 import supabase from '../config/supabase.js';
 import { and, eq, ilike, inArray, or, sql } from 'drizzle-orm';

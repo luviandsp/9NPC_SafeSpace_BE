@@ -114,21 +114,12 @@ export const getCurrentSession = async (
   next: NextFunction,
 ) => {
   try {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession();
-
-    if (error) return next(error);
-
-    if (!session) {
-      return res.status(404).json({ error: 'Sesi tidak ditemukan' });
-    }
+    const user = req.user;
 
     return res.status(200).json({
       success: true,
-      message: 'Sesi ditemukan',
-      data: session,
+      message: 'Sesi (Pengguna) ditemukan',
+      data: { user },
     });
   } catch (error) {
     next(error);
