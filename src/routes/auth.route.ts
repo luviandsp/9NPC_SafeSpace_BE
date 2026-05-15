@@ -28,7 +28,7 @@ router.post('/sign-out', requireAuth, signOut);
 // router.get('/get-user', getCurrentUser);
 
 // Endpoint untuk mendapatkan informasi sesi saat ini
-router.get('/get-session', getCurrentSession);
+router.get('/get-session', requireAuth, getCurrentSession);
 
 // Endpoint untuk memperbarui password pengguna
 router.post('/update-password', requireAuth, updatePasswordUser);

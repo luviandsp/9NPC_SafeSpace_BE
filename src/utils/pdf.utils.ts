@@ -71,7 +71,8 @@ export function generateReportPdf(
       .text('Tidak ada bukti dilampirkan.', { indent: 12 });
   } else {
     data.evidenceAssets.forEach((asset, i) => {
-      const fileName = asset.evidencePath.split('/').pop() ?? asset.evidencePath;
+      const fileName =
+        asset.evidencePath.split('/').pop() ?? asset.evidencePath;
       doc
         .fontSize(10)
         .font('Helvetica')
