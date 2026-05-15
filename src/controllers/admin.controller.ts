@@ -207,34 +207,22 @@ export const getAdminProfile = async (
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    const [
-      { data: authUser, error: authError },
-      [reportMetrics],
-      { data: urlData, error: urlError },
-    ] = await Promise.all([
-      supabase.auth.getUser(),
+    const [[reportMetrics], { data: urlData, error: urlError }] =
+      await Promise.all([
+        db
+          .select({
+            totalReports: count(),
+            totalFinishedReports: sql<number>`count(${report.id}) filter (where ${report.status} = 'DONE')::int`,
+            weeklyReports: sql<number>`count(${report.id}) filter (where ${report.createdAt} >= ${oneWeekAgo.toISOString()})::int`,
+          })
+          .from(report),
 
-      db
-        .select({
-          totalReports: count(),
-          totalFinishedReports: sql<number>`count(${report.id}) filter (where ${report.status} = 'DONE')::int`,
-          weeklyReports: sql<number>`count(${report.id}) filter (where ${report.createdAt} >= ${oneWeekAgo.toISOString()})::int`,
-        })
-        .from(report),
-
-      adminData.profilePicturePath
-        ? supabase.storage
-            .from('profile_pictures')
-            .createSignedUrl(adminData.profilePicturePath, 3600)
-        : Promise.resolve({ data: null, error: null }),
-    ]);
-
-    if (authError) {
-      console.error(
-        'Gagal mendapatkan data user dari Supabase:',
-        authError.message,
-      );
-    }
+        adminData.profilePicturePath
+          ? supabase.storage
+              .from('profile_pictures')
+              .createSignedUrl(adminData.profilePicturePath, 3600)
+          : Promise.resolve({ data: null, error: null }),
+      ]);
 
     if (urlError) {
       console.error('Error generating signed URL:', urlError.message);
@@ -246,7 +234,7 @@ export const getAdminProfile = async (
       data: {
         admin: adminData,
         activity: {
-          lastLogin: authUser?.user?.last_sign_in_at || null,
+          lastLogin: req.user!.last_sign_in_at || null,
           WeeklyReportCount: reportMetrics.weeklyReports,
         },
         report: {
