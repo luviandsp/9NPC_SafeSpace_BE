@@ -51,5 +51,5 @@ export const profilePictureUploadSchema = z.object({
   fileType: z.enum(['image/jpeg', 'image/png', 'image/jpg'], {
     message: 'Tipe file tidak didukung',
   }),
-  fileSize: z.number().max(10 * 1024 * 1024, 'Ukuran file maksimal 10MB'), // Maksimal 10MB
+  fileSize: z.number().max(2 * 1024 * 1024, 'Ukuran file maksimal 2MB'),
 });
