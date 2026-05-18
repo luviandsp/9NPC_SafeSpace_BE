@@ -9,7 +9,6 @@ import {
   getReportHistory,
 } from '../controllers/report.controller.js';
 import { createSignedUrlHandler } from '../controllers/upload.controller.js';
-import { requireAuth } from '../middlewares/auth.middleware.js';
 import { evidenceUploadSchema } from '../utils/validators/report.validator.js';
 
 const router = Router();
@@ -24,10 +23,10 @@ router.post(
 );
 
 // Endpoint untuk download laporan dalam format PDF
-router.get('/:id/download', requireAuth, downloadReport);
+router.get('/:id/download', downloadReport);
 
 // Endpoint untuk melihat riwayat status laporan
-router.get('/:id/history', requireAuth, getReportHistory);
+router.get('/:id/history', getReportHistory);
 
 // Endpoint untuk menambah bukti ke laporan yang sudah ada
 router.post('/:id/evidence', addEvidence);
