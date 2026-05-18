@@ -9,7 +9,7 @@ import { report, admin } from '../db/schema.js';
 import { eq, sql, count } from 'drizzle-orm';
 import { recordStatusHistory } from '../utils/history.utils.js';
 import { createNotification } from '../utils/notification.utils.js';
-import supabase from '../config/supabase.js';
+import { supabase, createScopedClient } from '../config/supabase.js';
 import { updateAdminProfileSchema } from '../utils/validators/admin.validator.js';
 
 export const getAllReports = async (
@@ -60,6 +60,14 @@ export const getReportById = async (
 ) => {
   const { id } = getReportByIdSchema.parse(req.params);
 
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token)
+    return res
+      .status(401)
+      .json({ success: false, message: 'Token tidak valid' });
+
+  const supabaseScoped = createScopedClient(token);
+
   try {
     const reportData = await db.query.report.findFirst({
       where: eq(report.id, id),
@@ -85,7 +93,7 @@ export const getReportById = async (
     }));
 
     if (pathsToSign.length > 0) {
-      const { data, error } = await supabase.storage
+      const { data, error } = await supabaseScoped.storage
         .from('evidence_assets')
         .createSignedUrls(pathsToSign, 60);
 
@@ -192,6 +200,14 @@ export const getAdminProfile = async (
 ) => {
   const adminId = req.user!.id;
 
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token)
+    return res
+      .status(401)
+      .json({ success: false, message: 'Token tidak valid' });
+
+  const supabaseScoped = createScopedClient(token);
+
   try {
     const adminData = await db.query.admin.findFirst({
       where: eq(admin.id, adminId),
@@ -218,7 +234,7 @@ export const getAdminProfile = async (
           .from(report),
 
         adminData.profilePicturePath
-          ? supabase.storage
+          ? supabaseScoped.storage
               .from('profile_pictures')
               .createSignedUrl(adminData.profilePicturePath, 3600)
           : Promise.resolve({ data: null, error: null }),

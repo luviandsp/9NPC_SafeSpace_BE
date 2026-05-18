@@ -3,7 +3,7 @@ import { db } from '../db/index.js';
 import { user } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 import { updateUserProfileSchema } from '../utils/validators/user.validator.js';
-import { supabase } from '../config/supabase.js';
+import { createScopedClient, supabase } from '../config/supabase.js';
 
 export const getUserProfile = async (
   req: Request,
@@ -11,6 +11,14 @@ export const getUserProfile = async (
   next: NextFunction,
 ) => {
   const userId = req.user!.id;
+
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token)
+    return res
+      .status(401)
+      .json({ success: false, message: 'Token tidak valid' });
+
+  const supabaseScoped = createScopedClient(token);
 
   try {
     const data = await db.query.user.findFirst({
@@ -27,7 +35,7 @@ export const getUserProfile = async (
     let profilePictureUrl = null;
 
     if (data.profilePicturePath) {
-      const { data: urlData, error } = await supabase.storage
+      const { data: urlData, error } = await supabaseScoped.storage
         .from('profile_pictures')
         .createSignedUrl(data.profilePicturePath, 3600);
 

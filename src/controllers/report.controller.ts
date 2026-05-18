@@ -9,7 +9,7 @@ import {
   admin as adminTable,
 } from '../db/schema.js';
 import { nanoid } from 'nanoid';
-import supabase from '../config/supabase.js';
+import supabase, { createScopedClient } from '../config/supabase.js';
 import { and, eq, ilike, inArray, or, sql } from 'drizzle-orm';
 import { generateReportPdf } from '../utils/pdf.utils.js';
 import { recordStatusHistory } from '../utils/history.utils.js';
@@ -34,6 +34,14 @@ export const createReport = async (
     perpetratorDesc,
     evidencePaths,
   } = createReportSchema.parse(req.body);
+
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token)
+    return res
+      .status(401)
+      .json({ success: false, message: 'Token tidak valid' });
+
+  const supabaseScoped = createScopedClient(token);
 
   try {
     // Menggunakan transaksi untuk memastikan integritas data
@@ -70,7 +78,7 @@ export const createReport = async (
           const permanentPath = `permanent/${insertedReport.id}/${fileName}`;
 
           // Lakukan pemindahan (move) di Supabase Storage
-          const { error: moveError } = await supabase.storage
+          const { error: moveError } = await supabaseScoped.storage
             .from('evidence_assets')
             .move(tempPath, permanentPath);
 
@@ -131,6 +139,14 @@ export const getReportById = async (
   const { id } = getReportByIdSchema.parse(req.params);
   const userId = req.user!.id;
 
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token)
+    return res
+      .status(401)
+      .json({ success: false, message: 'Token tidak valid' });
+
+  const supabaseScoped = createScopedClient(token);
+
   try {
     const reportData = await db.query.report.findFirst({
       where: and(eq(report.id, id), eq(report.userId, userId)),
@@ -156,7 +172,7 @@ export const getReportById = async (
     }));
 
     if (pathsToSign.length > 0) {
-      const { data, error } = await supabase.storage
+      const { data, error } = await supabaseScoped.storage
         .from('evidence_assets')
         .createSignedUrls(pathsToSign, 60);
 
@@ -302,6 +318,14 @@ export const addEvidence = async (
   const { id } = getReportByIdSchema.parse(req.params);
   const { evidencePaths } = addEvidenceSchema.parse(req.body);
 
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token)
+    return res
+      .status(401)
+      .json({ success: false, message: 'Token tidak valid' });
+
+  const supabaseScoped = createScopedClient(token);
+
   try {
     const existingReport = await db.query.report.findFirst({
       where: eq(report.id, id),
@@ -327,7 +351,7 @@ export const addEvidence = async (
       const fileName = tempPath.split('/').pop();
       const permanentPath = `permanent/${id}/${fileName}`;
 
-      const { error: moveError } = await supabase.storage
+      const { error: moveError } = await supabaseScoped.storage
         .from('evidence_assets')
         .move(tempPath, permanentPath);
 
