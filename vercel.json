@@ -11,5 +11,11 @@
   ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/src/index.ts" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/cleanup",
+      "schedule": "0 0 * * *"
+    }
   ]
 }
