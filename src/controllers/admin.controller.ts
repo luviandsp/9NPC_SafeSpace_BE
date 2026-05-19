@@ -9,6 +9,7 @@ import { report, admin } from '../db/schema.js';
 import { eq, sql, count } from 'drizzle-orm';
 import { recordStatusHistory } from '../utils/history.utils.js';
 import { createNotification } from '../utils/notification.utils.js';
+import { validateStatusTransition } from '../utils/status-transition.utils.js';
 import supabase from '../config/supabase.js';
 import { updateAdminProfileSchema } from '../utils/validators/admin.validator.js';
 
@@ -144,11 +145,14 @@ export const updateStatusReport = async (
       });
     }
 
-    if (existingReport.status === status) {
-      return res.status(200).json({
-        success: true,
-        message: 'Status laporan tidak berubah',
-        data: existingReport,
+    // Previously this returned 200 (idempotent). Now we enforce the state machine:
+    // same-status and invalid transitions both return 400 so the client always
+    // knows exactly which transitions are legal.
+    const transition = validateStatusTransition(existingReport.status, status);
+    if (!transition.valid) {
+      return res.status(400).json({
+        success: false,
+        message: transition.message,
       });
     }
 

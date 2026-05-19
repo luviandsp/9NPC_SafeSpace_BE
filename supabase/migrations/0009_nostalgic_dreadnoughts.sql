@@ -1,0 +1,2 @@
+CREATE TYPE "public"."report_category_enum" AS ENUM('KEKERASAN_SEKSUAL', 'KEKERASAN_VERBAL', 'KEKERASAN_FISIK', 'LAINNYA');--> statement-breakpoint
+ALTER TABLE "report" ADD COLUMN "category" "report_category_enum" DEFAULT 'LAINNYA' NOT NULL;

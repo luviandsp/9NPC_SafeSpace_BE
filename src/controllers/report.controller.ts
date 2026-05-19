@@ -26,6 +26,7 @@ export const createReport = async (
     location,
     incidentDesc,
     perpetratorDesc,
+    category,
     evidencePaths,
   } = createReportSchema.parse(req.body);
 
@@ -43,6 +44,7 @@ export const createReport = async (
           location: location,
           incidentDesc: incidentDesc,
           perpetratorDesc: perpetratorDesc,
+          category: category,
         })
         .returning();
 
@@ -191,13 +193,15 @@ export const getAllReports = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const { page, limit, search } = getAllReportsSchema.parse(req.query);
+  const { page, limit, search, category } = getAllReportsSchema.parse(
+    req.query,
+  );
 
   const userId = req.user!.id;
   const offset = (page - 1) * limit;
 
   const searchTerm = search ? `%${search}%` : null;
-  const whereClause = searchTerm
+  const baseClause = searchTerm
     ? and(
         eq(report.userId, userId),
         or(
@@ -206,6 +210,9 @@ export const getAllReports = async (
         ),
       )
     : eq(report.userId, userId);
+  const whereClause = category
+    ? and(baseClause, eq(report.category, category))
+    : baseClause;
 
   try {
     const reports = await db.query.report.findMany({

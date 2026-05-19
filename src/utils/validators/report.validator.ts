@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+export const reportCategorySchema = z.enum(
+  ['KEKERASAN_SEKSUAL', 'KEKERASAN_VERBAL', 'KEKERASAN_FISIK', 'LAINNYA'],
+  { message: 'Kategori tidak valid' },
+);
+
 export const createReportSchema = z.object({
   incident: z.string().min(1, 'Insiden harus diisi').trim(),
   date: z.coerce.date('Format tanggal tidak valid'),
@@ -9,6 +14,7 @@ export const createReportSchema = z.object({
     .string()
     .min(1, 'Deskripsi perpetrator harus diisi')
     .trim(),
+  category: reportCategorySchema,
   evidencePaths: z
     .array(z.string().min(1, 'Path bukti harus diisi'))
     .optional(),
@@ -47,6 +53,7 @@ export const getAllReportsSchema = z.object({
     .max(100, 'Limit maksimal adalah 100')
     .default(10),
   search: z.string().trim().optional(),
+  category: reportCategorySchema.optional(),
 });
 
 export const addEvidenceSchema = z.object({

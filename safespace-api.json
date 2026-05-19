@@ -250,6 +250,13 @@
             "required": false,
             "schema": { "type": "string" },
             "description": "Cari berdasarkan jenis insiden atau deskripsi insiden"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": { "$ref": "#/components/schemas/ReportCategory" },
+            "description": "Filter berdasarkan kategori laporan"
           }
         ],
         "responses": {
@@ -743,6 +750,11 @@
         },
         "required": ["email"]
       },
+      "ReportCategory": {
+        "type": "string",
+        "enum": ["KEKERASAN_SEKSUAL", "KEKERASAN_VERBAL", "KEKERASAN_FISIK", "LAINNYA"],
+        "description": "Kategori laporan kekerasan"
+      },
       "CreateReportRequest": {
         "type": "object",
         "properties": {
@@ -751,12 +763,13 @@
           "location": { "type": "string" },
           "incidentDesc": { "type": "string" },
           "perpetratorDesc": { "type": "string" },
+          "category": { "$ref": "#/components/schemas/ReportCategory" },
           "evidencePaths": {
             "type": "array",
             "items": { "type": "string" }
           }
         },
-        "required": ["incident", "date", "location", "incidentDesc", "perpetratorDesc"]
+        "required": ["incident", "date", "location", "incidentDesc", "perpetratorDesc", "category"]
       },
       "EvidenceUploadRequest": {
         "type": "object",
