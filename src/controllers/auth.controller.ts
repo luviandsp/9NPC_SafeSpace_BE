@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabase } from '../config/supabase.js';
+import { supabase, createScopedClient } from '../config/supabase.js';
 import {
   emailRequestSchema,
   signInSchema,
@@ -70,8 +70,16 @@ export const signOut = async (
   res: Response,
   next: NextFunction,
 ) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token)
+    return res
+      .status(401)
+      .json({ success: false, message: 'Token tidak valid' });
+
+  const supabaseScoped = createScopedClient(token);
+
   try {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabaseScoped.auth.signOut();
 
     if (error) return next(error);
 
@@ -81,54 +89,18 @@ export const signOut = async (
   }
 };
 
-// export const getCurrentUser = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction,
-// ) => {
-//   try {
-//     const {
-//       data: { user },
-//       error,
-//     } = await supabase.auth.getUser();
-
-//     if (error) return next(error);
-
-//     if (!user) {
-//       return res.status(404).json({ error: 'Pengguna tidak ditemukan' });
-//     }
-
-//     return res.status(200).json({
-//       success: true,
-//       message: 'Pengguna ditemukan',
-//       data: user,
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
 export const getCurrentSession = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession();
-
-    if (error) return next(error);
-
-    if (!session) {
-      return res.status(404).json({ error: 'Sesi tidak ditemukan' });
-    }
+    const user = req.user;
 
     return res.status(200).json({
       success: true,
-      message: 'Sesi ditemukan',
-      data: session,
+      message: 'Sesi (Pengguna) ditemukan',
+      data: { user },
     });
   } catch (error) {
     next(error);
@@ -141,9 +113,16 @@ export const updatePasswordUser = async (
   next: NextFunction,
 ) => {
   const { currentPassword, newPassword } = updatePasswordSchema.parse(req.body);
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token)
+    return res
+      .status(401)
+      .json({ success: false, message: 'Token tidak valid' });
+
+  const supabaseScoped = createScopedClient(token);
 
   try {
-    const { data, error } = await supabase.auth.updateUser({
+    const { data, error } = await supabaseScoped.auth.updateUser({
       password: newPassword,
       current_password: currentPassword,
     });

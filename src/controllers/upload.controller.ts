@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { nanoid } from 'nanoid';
-import supabase from '../config/supabase.js';
+import { createScopedClient } from '../config/supabase.js';
 import { ZodObject } from 'zod';
 import { profilePictureSchema } from '../utils/validators/user.validator.js';
 import { db } from '../db/index.js';
@@ -23,11 +23,19 @@ export const createSignedUrlHandler = (
       };
       const userId = req.user!.id;
 
+      const token = req.headers.authorization?.split(' ')[1];
+      if (!token)
+        return res
+          .status(401)
+          .json({ success: false, message: 'Token tidak valid' });
+
+      const supabaseScoped = createScopedClient(token);
+
       const safeFileName = fileName.replace(/[^a-zA-Z0-9.\-]/g, '_');
       const path = `temp/${userId}/${nanoid(8)}-${safeFileName}`;
 
       // 2. Gunakan nama bucket yang dilempar dari parameter
-      const { data, error } = await supabase.storage
+      const { data, error } = await supabaseScoped.storage
         .from(bucketName)
         .createSignedUploadUrl(path);
 
@@ -64,6 +72,14 @@ export const updateProfilePictureHandler = (
   return async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user!.id;
 
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token)
+      return res
+        .status(401)
+        .json({ success: false, message: 'Token tidak valid' });
+
+    const supabaseScoped = createScopedClient(token);
+
     try {
       // 1. Cari data existing
       const [existingRecord] = await db
@@ -89,7 +105,7 @@ export const updateProfilePictureHandler = (
 
       // 2. Hapus foto lama di Storage (Berlaku untuk Update maupun Delete)
       if (existingRecord.profilePicturePath) {
-        const { error: deleteError } = await supabase.storage
+        const { error: deleteError } = await supabaseScoped.storage
           .from('profile_pictures')
           .remove([existingRecord.profilePicturePath]);
 
@@ -108,7 +124,7 @@ export const updateProfilePictureHandler = (
         const fileName = profilePicturePath.split('/').pop();
         const permanentPath = `permanent/${userId}/${fileName}`;
 
-        const { error: moveError } = await supabase.storage
+        const { error: moveError } = await supabaseScoped.storage
           .from('profile_pictures')
           .move(profilePicturePath, permanentPath);
 

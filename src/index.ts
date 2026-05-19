@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import appRoutes from './routes/index.js';
 import { z, ZodError } from 'zod';
+import './utils/cleanup.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;

@@ -10,7 +10,7 @@ import { eq, sql, count, and, or, ilike, asc, desc } from 'drizzle-orm';
 import { recordStatusHistory } from '../utils/history.utils.js';
 import { createNotification } from '../utils/notification.utils.js';
 import { validateStatusTransition } from '../utils/status-transition.utils.js';
-import supabase from '../config/supabase.js';
+import { supabase, createScopedClient } from '../config/supabase.js';
 import {
   updateAdminProfileSchema,
   getRecentReportsSchema,
@@ -70,6 +70,14 @@ export const getReportById = async (
 ) => {
   const { id } = getReportByIdSchema.parse(req.params);
 
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token)
+    return res
+      .status(401)
+      .json({ success: false, message: 'Token tidak valid' });
+
+  const supabaseScoped = createScopedClient(token);
+
   try {
     const reportData = await db.query.report.findFirst({
       where: eq(report.id, id),
@@ -91,11 +99,11 @@ export const getReportById = async (
 
     let finalEvidenceAssets = reportData.evidenceAssets.map((asset) => ({
       ...asset,
-      assetUrl: null as string | null, // Default null untuk TypeScript
+      signedUrl: null as string | null, // Default null untuk TypeScript
     }));
 
     if (pathsToSign.length > 0) {
-      const { data, error } = await supabase.storage
+      const { data, error } = await supabaseScoped.storage
         .from('evidence_assets')
         .createSignedUrls(pathsToSign, 60);
 
@@ -110,7 +118,7 @@ export const getReportById = async (
 
           return {
             ...asset,
-            assetUrl: matchedUrlData?.signedUrl || null,
+            signedUrl: matchedUrlData?.signedUrl || null,
           };
         });
       }
@@ -204,6 +212,14 @@ export const getAdminProfile = async (
 ) => {
   const adminId = req.user!.id;
 
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token)
+    return res
+      .status(401)
+      .json({ success: false, message: 'Token tidak valid' });
+
+  const supabaseScoped = createScopedClient(token);
+
   try {
     const adminData = await db.query.admin.findFirst({
       where: eq(admin.id, adminId),
@@ -219,34 +235,22 @@ export const getAdminProfile = async (
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    const [
-      { data: authUser, error: authError },
-      [reportMetrics],
-      { data: urlData, error: urlError },
-    ] = await Promise.all([
-      supabase.auth.getUser(),
+    const [[reportMetrics], { data: urlData, error: urlError }] =
+      await Promise.all([
+        db
+          .select({
+            totalReports: count(),
+            totalFinishedReports: sql<number>`count(${report.id}) filter (where ${report.status} = 'DONE')::int`,
+            weeklyReports: sql<number>`count(${report.id}) filter (where ${report.createdAt} >= ${oneWeekAgo.toISOString()})::int`,
+          })
+          .from(report),
 
-      db
-        .select({
-          totalReports: count(),
-          totalFinishedReports: sql<number>`count(${report.id}) filter (where ${report.status} = 'DONE')::int`,
-          weeklyReports: sql<number>`count(${report.id}) filter (where ${report.createdAt} >= ${oneWeekAgo.toISOString()})::int`,
-        })
-        .from(report),
-
-      adminData.profilePicturePath
-        ? supabase.storage
-            .from('profile_pictures')
-            .createSignedUrl(adminData.profilePicturePath, 3600)
-        : Promise.resolve({ data: null, error: null }),
-    ]);
-
-    if (authError) {
-      console.error(
-        'Gagal mendapatkan data user dari Supabase:',
-        authError.message,
-      );
-    }
+        adminData.profilePicturePath
+          ? supabaseScoped.storage
+              .from('profile_pictures')
+              .createSignedUrl(adminData.profilePicturePath, 3600)
+          : Promise.resolve({ data: null, error: null }),
+      ]);
 
     if (urlError) {
       console.error('Error generating signed URL:', urlError.message);
@@ -258,7 +262,7 @@ export const getAdminProfile = async (
       data: {
         admin: adminData,
         activity: {
-          lastLogin: authUser?.user?.last_sign_in_at || null,
+          lastLogin: req.user!.last_sign_in_at || null,
           WeeklyReportCount: reportMetrics.weeklyReports,
         },
         report: {

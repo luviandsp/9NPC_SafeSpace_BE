@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "SafeSpace API",
-    "version": "1.4.0",
+    "version": "1.4.2",
     "description": "Dokumentasi API untuk SafeSpace Backend. Menyediakan layanan pelaporan insiden secara aman beserta sistem autentikasi dan manajemen pengguna/admin."
   },
   "servers": [
@@ -99,6 +99,7 @@
       "get": {
         "tags": ["Auth"],
         "summary": "Mendapatkan informasi sesi saat ini",
+        "security": [{ "BearerAuth": [] }],
         "responses": {
           "200": { "description": "Informasi sesi berhasil diambil" }
         }
@@ -997,7 +998,7 @@
             "type": "string",
             "enum": ["image/jpeg", "image/png", "image/jpg"]
           },
-          "fileSize": { "type": "number", "maximum": 10485760 }
+          "fileSize": { "type": "number", "maximum": 2097152 }
         },
         "required": ["fileName", "fileType", "fileSize"]
       },
