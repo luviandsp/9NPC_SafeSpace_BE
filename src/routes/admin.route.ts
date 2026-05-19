@@ -5,6 +5,10 @@ import {
   getReportById,
   updateAdminProfile,
   updateStatusReport,
+  getDashboardStats,
+  getDashboardCategories,
+  getRecentReports,
+  getAdminReports,
 } from '../controllers/admin.controller.js';
 import {
   updateProfilePictureHandler,
@@ -14,6 +18,15 @@ import { profilePictureUploadSchema } from '../utils/validators/user.validator.j
 import { admin } from '../db/schema.js';
 
 const router = Router();
+
+// Dashboard endpoints
+router.get('/dashboard/stats', getDashboardStats);
+router.get('/dashboard/categories', getDashboardCategories);
+
+// New paginated report list with full filtering (plural)
+router.get('/reports/recent', getRecentReports);
+router.get('/reports', getAdminReports);
+router.patch('/reports/:id/status', updateStatusReport);
 
 // Endpoint untuk admin mengelola laporan
 router.get('/report', getAllReports);

@@ -21,6 +21,13 @@ export const reportStatusEnum = pgEnum('report_status_enum', [
   'CANCELLED',
 ]);
 
+export const reportCategoryEnum = pgEnum('report_category_enum', [
+  'KEKERASAN_SEKSUAL',
+  'KEKERASAN_VERBAL',
+  'KEKERASAN_FISIK',
+  'LAINNYA',
+]);
+
 export const user = pgTable('user', {
   id: uuid('id').primaryKey(), // ID akan diambil dari Supabase Auth, jadi kita hapus defaultRandom()
   name: varchar('name', { length: 255 }),
@@ -81,6 +88,7 @@ export const report = pgTable('report', {
   incidentDesc: text('incidentDesc').notNull(),
   perpetratorDesc: text('perpetratorDesc').notNull(),
   status: reportStatusEnum('status').notNull().default('RECEIVED'),
+  category: reportCategoryEnum('category').notNull().default('LAINNYA'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt')
     .notNull()
