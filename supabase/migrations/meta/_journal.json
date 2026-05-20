@@ -78,6 +78,13 @@
       "when": 1779239196972,
       "tag": "0010_absent_exodus",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1779255246880,
+      "tag": "0011_unknown_banshee",
+      "breakpoints": true
     }
   ]
 }

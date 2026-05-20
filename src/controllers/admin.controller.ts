@@ -160,9 +160,6 @@ export const updateStatusReport = async (
       });
     }
 
-    // Previously this returned 200 (idempotent). Now we enforce the state machine:
-    // same-status and invalid transitions both return 400 so the client always
-    // knows exactly which transitions are legal.
     const transition = validateStatusTransition(existingReport.status, status);
     if (!transition.valid) {
       return res.status(400).json({

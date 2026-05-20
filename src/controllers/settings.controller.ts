@@ -9,15 +9,31 @@ export const getSettings = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const userId = req.user!.id;
-
   try {
+    // 1. Ambil ID dan Role dari JWT Session
+    const requesterId = req.user!.id;
+    const isAdmin = req.user!.user_metadata?.role === 'ADMIN';
+
+    // 2. Tentukan kolom mana yang akan dicari berdasarkan role
+    const whereCondition = isAdmin
+      ? eq(preference.adminId, requesterId)
+      : eq(preference.userId, requesterId);
+
+    // 3. Lakukan pencarian
     let settings = await db.query.preference.findFirst({
-      where: eq(preference.userId, userId),
+      where: whereCondition,
     });
 
+    // 4. Jika tidak ada, jalankan Auto-Provisioning (Insert)
     if (!settings) {
-      [settings] = await db.insert(preference).values({ userId }).returning();
+      const insertPayload = isAdmin
+        ? { adminId: requesterId }
+        : { userId: requesterId };
+
+      [settings] = await db
+        .insert(preference)
+        .values(insertPayload)
+        .returning();
     }
 
     return res.status(200).json({
@@ -35,18 +51,36 @@ export const updateSettings = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const userId = req.user!.id;
-  const body = updateSettingsSchema.parse(req.body);
-
   try {
+    // 1. Ambil ID dan Role dari JWT Session
+    const requesterId = req.user!.id;
+    const isAdmin = req.user!.user_metadata?.role === 'ADMIN';
+
+    const body = updateSettingsSchema.parse(req.body);
+
+    // 2. Tentukan kondisi pencarian berdasarkan role
+    const whereCondition = isAdmin
+      ? eq(preference.adminId, requesterId)
+      : eq(preference.userId, requesterId);
+
+    // 3. Cek eksistensi data
     let existing = await db.query.preference.findFirst({
-      where: eq(preference.userId, userId),
+      where: whereCondition,
     });
 
+    // 4. Jika belum ada, lakukan Insert (Auto-Provisioning) terlebih dahulu
     if (!existing) {
-      [existing] = await db.insert(preference).values({ userId }).returning();
+      const insertPayload = isAdmin
+        ? { adminId: requesterId }
+        : { userId: requesterId };
+
+      [existing] = await db
+        .insert(preference)
+        .values(insertPayload)
+        .returning();
     }
 
+    // 5. Update data
     const [updated] = await db
       .update(preference)
       .set({ ...body, updatedAt: new Date() })
