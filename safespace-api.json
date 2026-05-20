@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "SafeSpace API",
-    "version": "1.6.1",
+    "version": "1.7.0",
     "description": "Dokumentasi API untuk SafeSpace Backend. Menyediakan layanan pelaporan insiden secara aman beserta sistem autentikasi dan manajemen pengguna/admin."
   },
   "servers": [
@@ -149,6 +149,7 @@
       "post": {
         "tags": ["Auth"],
         "summary": "Meminta reset password",
+        "security": [{ "BearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -159,6 +160,23 @@
         },
         "responses": {
           "200": { "description": "Instruksi reset password telah dikirim" }
+        }
+      }
+    },
+    "/confirm-password-reset": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Konfirmasi password baru yang akan digunakan",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ConfirmPasswordReset" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Password berhasil diperbarui" }
         }
       }
     },
@@ -962,6 +980,13 @@
           "email": { "type": "string", "format": "email" }
         },
         "required": ["email"]
+      },
+      "ConfirmPasswordReset": {
+        "type": "object",
+        "properties": {
+          "newPassword": { "type": "string", "minLength": 8, "maxLength": 50 }
+        },
+        "required": ["newPassword"]
       },
       "ReportCategory": {
         "type": "string",

@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { supabase, createScopedClient } from '../config/supabase.js';
+import 'dotenv/config';
 import {
+  confirmPasswordResetSchema,
   emailRequestSchema,
   signInSchema,
   signUpSchema,
@@ -19,6 +21,7 @@ export const signUp = (role: 'USER' | 'ADMIN' = 'USER') => {
           data: {
             role: role,
           },
+          emailRedirectTo: process.env.FRONTEND_URL_LOGIN,
         },
       });
 
@@ -171,13 +174,50 @@ export const resetEmailPassword = async (
   const { email } = emailRequestSchema.parse(req.body);
 
   try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: process.env.FRONTEND_URL_RESET_PASSWORD,
+    });
 
     if (error) return next(error);
 
     return res.status(200).json({
       success: true,
       message: 'Email reset password telah dikirim. Silakan cek inbox Anda.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const confirmPasswordReset = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { newPassword } = confirmPasswordResetSchema.parse(req.body);
+
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'Token pemulihan tidak valid atau tidak ditemukan',
+    });
+  }
+
+  const supabaseScoped = createScopedClient(token);
+
+  try {
+    const { data, error } = await supabaseScoped.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) return next(error);
+
+    return res.status(200).json({
+      success: true,
+      message:
+        'Password berhasil direset. Silakan login menggunakan password baru.',
+      data: data.user,
     });
   } catch (error) {
     next(error);

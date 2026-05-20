@@ -9,7 +9,7 @@ import {
   admin as adminTable,
 } from '../db/schema.js';
 import { nanoid } from 'nanoid';
-import supabase, { createScopedClient } from '../config/supabase.js';
+import { createScopedClient } from '../config/supabase.js';
 import { and, eq, ilike, inArray, or, sql } from 'drizzle-orm';
 import { generateReportPdf } from '../utils/pdf.utils.js';
 import { recordStatusHistory } from '../utils/history.utils.js';

@@ -57,6 +57,21 @@ export const updatePasswordSchema = z
     path: ['confirmPassword'],
   });
 
+export const confirmPasswordResetSchema = z.object({
+  newPassword: z
+    .string()
+    .min(8, 'Password baru harus memiliki minimal 8 karakter')
+    .max(50, 'Password baru terlalu panjang')
+    .refine((value) => {
+      const hasUpperCase = /[A-Z]/.test(value);
+      const hasLowerCase = /[a-z]/.test(value);
+      const hasNumber = /\d/.test(value);
+
+      return hasUpperCase && hasLowerCase && hasNumber;
+    }, 'Password baru harus mengandung huruf besar, huruf kecil, dan angka')
+    .trim(),
+});
+
 export const emailRequestSchema = z.object({
   email: z.email('Email tidak valid').trim(),
 });

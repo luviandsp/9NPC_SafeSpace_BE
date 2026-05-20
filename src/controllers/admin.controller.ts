@@ -10,7 +10,7 @@ import { eq, sql, count, and, or, ilike, asc, desc } from 'drizzle-orm';
 import { recordStatusHistory } from '../utils/history.utils.js';
 import { createNotification } from '../utils/notification.utils.js';
 import { validateStatusTransition } from '../utils/status-transition.utils.js';
-import { supabase, createScopedClient } from '../config/supabase.js';
+import { createScopedClient } from '../config/supabase.js';
 import {
   updateAdminProfileSchema,
   getRecentReportsSchema,
