@@ -8,7 +8,7 @@ import {
   resendVerificationEmail,
   resetEmailPassword,
 } from '../controllers/auth.controller.js';
-import { requireAuth } from '../middlewares/auth.middleware.js';
+import { requireAdmin, requireAuth } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
@@ -16,7 +16,7 @@ const router = Router();
 router.post('/sign-up', signUp('USER'));
 
 // Endpoint untuk registrasi admin
-router.post('/admin/sign-up', signUp('ADMIN'));
+router.post('/admin/sign-up', requireAdmin, signUp('ADMIN'));
 
 // Endpoint untuk login (sign-in)
 router.post('/sign-in', signIn);
