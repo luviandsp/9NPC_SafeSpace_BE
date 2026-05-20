@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "SafeSpace API",
-    "version": "1.6.0",
+    "version": "1.6.1",
     "description": "Dokumentasi API untuk SafeSpace Backend. Menyediakan layanan pelaporan insiden secara aman beserta sistem autentikasi dan manajemen pengguna/admin."
   },
   "servers": [
@@ -59,6 +59,7 @@
       "post": {
         "tags": ["Auth"],
         "summary": "Registrasi admin baru",
+        "security": [{ "BearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
