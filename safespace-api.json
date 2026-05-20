@@ -31,6 +31,10 @@
     {
       "name": "Notification",
       "description": "Endpoint untuk melihat dan mengelola notifikasi pengguna dan admin."
+    },
+    {
+      "name": "Settings",
+      "description": "Endpoint untuk melihat dan memperbarui pengaturan notifikasi pengguna."
     }
   ],
   "paths": {
@@ -870,6 +874,51 @@
         }
       }
     }
+    "/settings": {
+      "get": {
+        "tags": ["Settings"],
+        "summary": "Ambil pengaturan notifikasi user",
+        "description": "Mengembalikan pengaturan notifikasi user yang sedang login. Auto-create dengan default values jika belum ada.",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Pengaturan berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SettingsResponse" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "put": {
+        "tags": ["Settings"],
+        "summary": "Perbarui pengaturan notifikasi user",
+        "description": "Memperbarui satu atau lebih toggle notifikasi. Semua field opsional.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateSettingsRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pengaturan berhasil diperbarui",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SettingsResponse" }
+              }
+            }
+          },
+          "400": { "description": "Validasi gagal" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    }
   },
   "components": {
     "securitySchemes": {
@@ -1123,6 +1172,41 @@
               "count": { "type": "integer", "description": "Jumlah notifikasi yang berhasil ditandai sebagai dibaca" }
             }
           }
+        }
+      },
+      "Settings": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "userId": { "type": "string", "format": "uuid", "nullable": true },
+          "adminId": { "type": "string", "format": "uuid", "nullable": true },
+          "emailStatusUpdate": { "type": "boolean" },
+          "emailWeeklySummary": { "type": "boolean" },
+          "emailSecurityAlert": { "type": "boolean" },
+          "emailNewArticles": { "type": "boolean" },
+          "pushStatusUpdate": { "type": "boolean" },
+          "pushSecurityAlert": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "SettingsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/Settings" }
+        }
+      },
+      "UpdateSettingsRequest": {
+        "type": "object",
+        "properties": {
+          "emailStatusUpdate": { "type": "boolean" },
+          "emailWeeklySummary": { "type": "boolean" },
+          "emailSecurityAlert": { "type": "boolean" },
+          "emailNewArticles": { "type": "boolean" },
+          "pushStatusUpdate": { "type": "boolean" },
+          "pushSecurityAlert": { "type": "boolean" }
         }
       }
     }

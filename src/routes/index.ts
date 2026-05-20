@@ -4,6 +4,7 @@ import reportRoutes from './report.route.js';
 import adminRoutes from './admin.route.js';
 import userRoutes from './user.route.js';
 import notificationRoutes from './notification.route.js';
+import settingsRoutes from './settings.route.js';
 import { requireAdmin, requireAuth } from '../middlewares/auth.middleware.js';
 import cronRoutes from './cron.route.js';
 
@@ -16,5 +17,6 @@ router.use('/user', requireAuth, userRoutes);
 router.use('/admin', requireAdmin, adminRoutes);
 router.use('/notifications', requireAuth, notificationRoutes);
 router.use('/cron', cronRoutes);
+router.use('/settings', requireAuth, settingsRoutes);
 
 export default router;
