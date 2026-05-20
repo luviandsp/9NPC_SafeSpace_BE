@@ -17,10 +17,7 @@ export const getSettings = async (
     });
 
     if (!settings) {
-      [settings] = await db
-        .insert(preference)
-        .values({ userId })
-        .returning();
+      [settings] = await db.insert(preference).values({ userId }).returning();
     }
 
     return res.status(200).json({
@@ -47,10 +44,7 @@ export const updateSettings = async (
     });
 
     if (!existing) {
-      [existing] = await db
-        .insert(preference)
-        .values({ userId })
-        .returning();
+      [existing] = await db.insert(preference).values({ userId }).returning();
     }
 
     const [updated] = await db
