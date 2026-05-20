@@ -1,0 +1,1 @@
+ALTER TABLE "preference" ADD CONSTRAINT "check_exclusive_owner" CHECK (("userId" IS NOT NULL AND "adminId" IS NULL) OR ("userId" IS NULL AND "adminId" IS NOT NULL));

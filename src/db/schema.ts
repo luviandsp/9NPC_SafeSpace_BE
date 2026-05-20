@@ -1,4 +1,4 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
   pgTable,
   text,
@@ -9,6 +9,7 @@ import {
   boolean,
   pgEnum,
   index,
+  check,
 } from 'drizzle-orm/pg-core';
 
 export const reportStatusEnum = pgEnum('report_status_enum', [
@@ -58,22 +59,33 @@ export const admin = pgTable('admin', {
     .$onUpdate(() => new Date()),
 });
 
-export const preference = pgTable('preference', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('userId').references(() => user.id, { onDelete: 'cascade' }),
-  adminId: uuid('adminId').references(() => admin.id, { onDelete: 'cascade' }),
-  emailStatusUpdate: boolean('emailStatusUpdate').notNull().default(false),
-  emailWeeklySummary: boolean('emailWeeklySummary').notNull().default(false),
-  emailSecurityAlert: boolean('emailSecurityAlert').notNull().default(false),
-  emailNewArticles: boolean('emailNewArticles').notNull().default(false),
-  pushStatusUpdate: boolean('pushStatusUpdate').notNull().default(false),
-  pushSecurityAlert: boolean('pushSecurityAlert').notNull().default(false),
-  createdAt: timestamp('createdAt').notNull().defaultNow(),
-  updatedAt: timestamp('updatedAt')
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
+export const preference = pgTable(
+  'preference',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('userId').references(() => user.id, { onDelete: 'cascade' }),
+    adminId: uuid('adminId').references(() => admin.id, {
+      onDelete: 'cascade',
+    }),
+    emailStatusUpdate: boolean('emailStatusUpdate').notNull().default(false),
+    emailWeeklySummary: boolean('emailWeeklySummary').notNull().default(false),
+    emailSecurityAlert: boolean('emailSecurityAlert').notNull().default(false),
+    emailNewArticles: boolean('emailNewArticles').notNull().default(false),
+    pushStatusUpdate: boolean('pushStatusUpdate').notNull().default(false),
+    pushSecurityAlert: boolean('pushSecurityAlert').notNull().default(false),
+    createdAt: timestamp('createdAt').notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt')
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  () => [
+    check(
+      'check_exclusive_owner',
+      sql`("userId" IS NOT NULL AND "adminId" IS NULL) OR ("userId" IS NULL AND "adminId" IS NOT NULL)`,
+    ),
+  ],
+);
 
 export const report = pgTable('report', {
   id: uuid('id').defaultRandom().primaryKey(),
