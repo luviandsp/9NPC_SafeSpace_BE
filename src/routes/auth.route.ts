@@ -7,6 +7,7 @@ import {
   updatePasswordUser,
   resendVerificationEmail,
   resetEmailPassword,
+  confirmPasswordReset,
 } from '../controllers/auth.controller.js';
 import { requireAdmin, requireAuth } from '../middlewares/auth.middleware.js';
 
@@ -24,9 +25,6 @@ router.post('/sign-in', signIn);
 // Endpoint untuk logout (sign-out)
 router.post('/sign-out', requireAuth, signOut);
 
-// Endpoint untuk mendapatkan informasi pengguna saat ini
-// router.get('/get-user', getCurrentUser);
-
 // Endpoint untuk mendapatkan informasi sesi saat ini
 router.get('/get-session', requireAuth, getCurrentSession);
 
@@ -38,5 +36,8 @@ router.post('/resend-verification-email', resendVerificationEmail);
 
 // Endpoint untuk request reset password
 router.post('/request-password-reset', resetEmailPassword);
+
+// Endpoint untuk memproses form password baru dari email pemulihan
+router.post('/confirm-password-reset', confirmPasswordReset);
 
 export default router;
