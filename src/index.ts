@@ -20,6 +20,7 @@ if (process.env.NODE_ENV === 'production') {
       'PERINGATAN: FRONTEND_URL tidak diatur di environment production. Permintaan dari frontend mungkin akan diblokir oleh CORS.',
     );
   }
+  allowedOrigins.push('http://localhost:5173');
 } else {
   // Untuk development, izinkan beberapa origin umum seperti localhost.
   allowedOrigins.push('http://localhost:5173');
