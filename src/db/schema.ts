@@ -62,12 +62,12 @@ export const preference = pgTable('preference', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('userId').references(() => user.id, { onDelete: 'cascade' }),
   adminId: uuid('adminId').references(() => admin.id, { onDelete: 'cascade' }),
-  emailReportStatus: boolean('emailReportStatus').notNull().default(true),
+  emailStatusUpdate: boolean('emailStatusUpdate').notNull().default(false),
   emailWeeklySummary: boolean('emailWeeklySummary').notNull().default(false),
-  emailSecurity: boolean('emailMonthlySummary').notNull().default(true),
-  emailNewArticle: boolean('emailNewArticle').notNull().default(false),
-  browserReportStatus: boolean('browserReportStatus').notNull().default(true),
-  browserSecurity: boolean('browserSecurity').notNull().default(true),
+  emailSecurityAlert: boolean('emailSecurityAlert').notNull().default(false),
+  emailNewArticles: boolean('emailNewArticles').notNull().default(false),
+  pushStatusUpdate: boolean('pushStatusUpdate').notNull().default(false),
+  pushSecurityAlert: boolean('pushSecurityAlert').notNull().default(false),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt')
     .notNull()
