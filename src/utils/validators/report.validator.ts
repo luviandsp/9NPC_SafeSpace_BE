@@ -14,7 +14,7 @@ export const createReportSchema = z.object({
     .string()
     .min(1, 'Deskripsi perpetrator harus diisi')
     .trim(),
-  category: reportCategorySchema,
+  category: reportCategorySchema.optional().default('LAINNYA'),
   evidencePaths: z
     .array(z.string().min(1, 'Path bukti harus diisi'))
     .optional(),

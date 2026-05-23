@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "SafeSpace API",
-    "version": "1.7.0",
+    "version": "1.7.1",
     "description": "Dokumentasi API untuk SafeSpace Backend. Menyediakan layanan pelaporan insiden secara aman beserta sistem autentikasi dan manajemen pengguna/admin."
   },
   "servers": [
@@ -991,7 +991,8 @@
       "ReportCategory": {
         "type": "string",
         "enum": ["KEKERASAN_SEKSUAL", "KEKERASAN_VERBAL", "KEKERASAN_FISIK", "LAINNYA"],
-        "description": "Kategori laporan kekerasan"
+        "description": "Kategori laporan kekerasan",
+        "default": "LAINNYA"
       },
       "CreateReportRequest": {
         "type": "object",
